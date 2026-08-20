@@ -64,6 +64,14 @@ aeroview-360/
    CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
    CLOUDINARY_API_KEY=your_cloudinary_api_key
    CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-app-password
+   SMTP_FROM="Aeroview 360 <no-reply@yourdomain.com>"
+   FRONTEND_URL=http://localhost:3000
    ```
 3. Sync and Seed the Database with Sample Data:
    Run the seed script to compile default records and test credentials:
