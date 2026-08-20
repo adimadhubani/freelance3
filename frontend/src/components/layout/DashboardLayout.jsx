@@ -39,12 +39,13 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-bgLight flex overflow-hidden">
+    <div className="portal-page">
+      <div className="portal-shell">
       {/* Navigation Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto h-screen relative">
+      <div className="portal-main flex flex-col min-w-0 relative">
         {/* Dashboard Top Header */}
         <Header
           siteName={site?.site_name}
@@ -53,14 +54,10 @@ const DashboardLayout = () => {
         />
 
         {/* Dynamic Outlet Component Grid */}
-        <main className="flex-grow p-md md:p-lg">
+        <main className="portal-content flex-grow">
           <Outlet context={{ site, monthlyUpdates, finalProducts, refetch }} />
         </main>
-
-        {/* Footer */}
-        <footer className="py-md text-center border-t border-borderLight bg-white text-xs text-textMuted mt-auto">
-          <p>© {new Date().getFullYear()} Aeroview 360. All rights reserved.</p>
-        </footer>
+      </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import ReactPlayer from 'react-player';
 import MonthlyCard from '../components/cards/MonthlyCard';
 import EmptyState from '../components/common/EmptyState';
-import { FiX, FiFilm } from 'react-icons/fi';
+import { FiFilm, FiInfo, FiX } from 'react-icons/fi';
 
 const TourVideo = () => {
   const { monthlyUpdates } = useOutletContext();
@@ -35,20 +35,12 @@ const TourVideo = () => {
 
   return (
     <div>
-      {/* Title Header */}
-      <div className="mb-lg flex justify-between items-start">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-textPrimary">Site Walkthrough & Drone Flythroughs</h1>
-          <p className="text-sm text-textSecondary mt-xs">
-            Browse walkthrough videos and aerial flythrough videos showing monthly progress updates.
-          </p>
-        </div>
-      </div>
+      <div className="section-title"><div className="section-title__icon"><FiFilm /></div><div><h2>Monthly Video</h2><p>Track progress with monthly walkthrough and flythrough videos.</p></div></div>
 
       {videos.length === 0 ? (
         <EmptyState message="No tracking videos have been uploaded for this site yet." />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+        <div className="portal-grid portal-grid--three">
           {videos.map((vid) => (
             <MonthlyCard
               key={vid.video_id}
@@ -65,6 +57,7 @@ const TourVideo = () => {
           ))}
         </div>
       )}
+      {videos.length > 0 && <div className="info-bar"><FiInfo /> Select any monthly card to watch its walkthrough or flythrough video.</div>}
 
       {/* Video Streaming Lightbox Overlay */}
       {activeVideo && (

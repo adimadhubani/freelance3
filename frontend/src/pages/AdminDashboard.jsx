@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { createClient, createSite, uploadMonthlyData, uploadFinalProduct } from '../services/siteService';
 import api from '../services/api';
-import { FiUpload, FiArrowLeft, FiPlus, FiTrendingUp } from 'react-icons/fi';
+import { FiUpload, FiArrowLeft, FiPlus, FiShield, FiTrendingUp } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
 
 const AdminDashboard = () => {
@@ -36,23 +36,38 @@ const AdminDashboard = () => {
 
   // Form 1: Client
   const [clientName, setClientName] = useState('');
+  const [clientUserName, setClientUserName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientPassword, setClientPassword] = useState('');
+  const [clientPasswordConfirm, setClientPasswordConfirm] = useState('');
   const [clientLogo, setClientLogo] = useState(null);
   const [clientLogoUrl, setClientLogoUrl] = useState('');
 
   const handleClientSubmit = async (e) => {
     e.preventDefault();
-    if (!clientName) return toast.error('Client name is required.');
+    if (!clientName || !clientUserName || !clientEmail || !clientPassword) {
+      return toast.error('Complete the client and login details.');
+    }
+    if (clientPassword.length < 8) return toast.error('Password must be at least 8 characters.');
+    if (clientPassword !== clientPasswordConfirm) return toast.error('Passwords do not match.');
 
     setLoading(true);
     const formData = new FormData();
     formData.append('client_name', clientName);
+    formData.append('user_name', clientUserName);
+    formData.append('email', clientEmail);
+    formData.append('password', clientPassword);
     if (clientLogo) formData.append('company_logo', clientLogo);
     if (clientLogoUrl) formData.append('company_logo_url', clientLogoUrl);
 
     try {
       await createClient(formData);
-      toast.success('Client registered successfully!');
+      toast.success('Client and login registered successfully!');
       setClientName('');
+      setClientUserName('');
+      setClientEmail('');
+      setClientPassword('');
+      setClientPasswordConfirm('');
       setClientLogo(null);
       setClientLogoUrl('');
       loadSelectors();
@@ -212,30 +227,26 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-xl px-md">
+    <div className="admin-workspace">
       <Toaster position="top-right" />
 
-      {/* Top Title Bar */}
-      <div className="mb-lg flex justify-between items-center">
+      <header className="admin-header">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-textPrimary flex items-center gap-xs">
-            Admin Upload System
-          </h1>
-          <p className="text-sm text-textSecondary mt-xs">
-            Create clients/sites and upload monthly media walkthroughs without modifying source code.
-          </p>
+          <span className="admin-eyebrow"><FiShield /> Administration</span>
+          <h1>Project Operations</h1>
+          <p>Create client access, register sites, and publish project progress from one workspace.</p>
         </div>
         <button
           onClick={() => { logout(); navigate('/login'); }}
-          className="btn-secondary py-xs text-sm flex items-center gap-xs"
+          className="admin-signout"
         >
           <FiArrowLeft />
           <span>Sign Out</span>
         </button>
-      </div>
+      </header>
 
       {/* Tabs */}
-      <div className="flex border-b border-borderLight mb-lg overflow-x-auto">
+      <div className="admin-tabs">
         {[
           { id: 'client', label: '1. Register Client' },
           { id: 'site', label: '2. Register Project Site' },
@@ -245,10 +256,7 @@ const AdminDashboard = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-md py-sm font-semibold text-sm whitespace-nowrap border-b-2 transition-all ${activeTab === tab.id
-              ? 'border-primaryDark text-textPrimary'
-              : 'border-transparent text-textMuted hover:text-textSecondary'
-              }`}
+            className={`admin-tab ${activeTab === tab.id ? 'active' : ''}`}
           >
             {tab.label}
           </button>
@@ -256,7 +264,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Form content */}
-      <div className="bg-white rounded-card border border-borderLight shadow-card p-lg">
+      <div className="admin-panel">
         {loading && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex flex-col items-center justify-center z-10 rounded-card">
             <div className="w-10 h-10 border-4 border-borderLight border-t-primaryDark rounded-full animate-spin"></div>
@@ -277,6 +285,52 @@ const AdminDashboard = () => {
                 onChange={(e) => setClientName(e.target.value)}
                 className="form-input"
               />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div>
+                <label className="form-label">Client User Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Priya Sharma"
+                  value={clientUserName}
+                  onChange={(e) => setClientUserName(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+              <div>
+                <label className="form-label">Client Login Email</label>
+                <input
+                  type="email"
+                  placeholder="priya@buildcorp.com"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div>
+                <label className="form-label">Client Login Password</label>
+                <input
+                  type="password"
+                  placeholder="At least 8 characters"
+                  value={clientPassword}
+                  onChange={(e) => setClientPassword(e.target.value)}
+                  className="form-input"
+                  minLength="8"
+                />
+              </div>
+              <div>
+                <label className="form-label">Confirm Password</label>
+                <input
+                  type="password"
+                  placeholder="Repeat client password"
+                  value={clientPasswordConfirm}
+                  onChange={(e) => setClientPasswordConfirm(e.target.value)}
+                  className="form-input"
+                  minLength="8"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
               <div>
@@ -301,7 +355,7 @@ const AdminDashboard = () => {
             </div>
             <button type="submit" className="btn-primary w-full py-sm mt-md flex items-center justify-center gap-xs">
               <FiPlus />
-              Create Client organization
+              Create Client & Login
             </button>
           </form>
         )}

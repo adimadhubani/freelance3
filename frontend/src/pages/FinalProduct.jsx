@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import ProductCard from '../components/cards/ProductCard';
 import EmptyState from '../components/common/EmptyState';
-import { FiX, FiDownload } from 'react-icons/fi';
+import { FiBox, FiDownload, FiInfo, FiX } from 'react-icons/fi';
 
 const FinalProduct = () => {
   const { finalProducts } = useOutletContext();
@@ -29,13 +29,7 @@ const FinalProduct = () => {
 
   return (
     <div>
-      {/* Title Header */}
-      <div className="mb-lg">
-        <h1 className="text-xl md:text-2xl font-bold text-textPrimary">Final Blueprints & Aerial Products</h1>
-        <p className="text-sm text-textSecondary mt-xs">
-          Access finished project schematics, elevation models, site maps, and aerial renders.
-        </p>
-      </div>
+      <div className="section-title"><div className="section-title__icon"><FiBox /></div><div><h2>Final Product Overview</h2><p>Explore final deliverables including elevations and aerial top views.</p></div></div>
 
       {/* Tab Filter Navigation */}
       <div className="flex border-b border-borderLight mb-lg">
@@ -85,6 +79,7 @@ const FinalProduct = () => {
           ))}
         </div>
       )}
+      {filteredProducts.length > 0 && <div className="info-bar"><FiInfo /> Select a deliverable to preview it, then download the original file when needed.</div>}
 
       {/* Full Screen Image Lightbox Preview Overlay */}
       {previewProduct && (

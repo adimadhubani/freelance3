@@ -1,148 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FiEye, FiEyeOff, FiLock, FiShield, FiUser } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
+import BrandMark from '../components/common/BrandMark';
+import { useAuth } from '../hooks/useAuth';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [formError, setFormError] = useState('');
-
-  const { login, isAuthenticated, loading, user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Redirect if already authenticated - based on role
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      // Admin goes to /admin, client goes to /profile
-      if (user.role === 'admin') {
-        navigate('/admin', { replace: true });
-      } else {
-        navigate('/profile', { replace: true });
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
-
-  // Check for expired token alerts
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('expired') === 'true') {
-      toast.error('Session expired. Please log in again.', { id: 'expired' });
-    }
-  }, [location]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormError('');
-
-    if (!email || !password) {
-      setFormError('Please enter both email and password.');
-      return;
-    }
-
-    const res = await login(email, password);
-    if (res.success) {
-      toast.success('Successfully logged in!');
-
-      // Redirect based on role after successful login
-      if (res.user?.role === 'admin') {
-        navigate('/admin', { replace: true });
-      } else {
-        navigate('/profile', { replace: true });
-      }
-    } else {
-      setFormError(res.error);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-bgLight p-md">
-      <Toaster position="top-right" />
-      <div className="w-full max-w-[420px]">
-        {/* Core Logo Panel */}
-        <div className="text-center mb-xl">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-primaryDark text-white font-black text-xl rounded-card shadow-card mb-md">
-            A
-          </div>
-          <h1 className="text-2xl font-bold text-textPrimary tracking-tight">Aeroview 360</h1>
-          <p className="text-sm text-textSecondary mt-xs font-medium">Construction Management Portal</p>
-        </div>
-
-        {/* Card Form */}
-        <div className="bg-white rounded-card shadow-card border border-borderLight p-lg">
-          <h2 className="text-lg font-bold text-textPrimary mb-lg">Sign In</h2>
-
-          {formError && (
-            <div className="mb-lg p-sm bg-red-50 border border-red-200 text-errorRed rounded-button flex items-center gap-xs text-xs font-semibold">
-              <FiAlertCircle className="flex-shrink-0" size={16} />
-              <span>{formError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-md">
-            <div>
-              <label className="form-label">Email Address</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-md flex items-center text-textLight">
-                  <FiMail size={16} />
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="form-input pl-[44px]"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="form-label">Password</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-md flex items-center text-textLight">
-                  <FiLock size={16} />
-                </span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="form-input pl-[44px]"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-[12px] mt-md"
-            >
-              {loading ? 'Authenticating...' : 'Sign In'}
-            </button>
-          </form>
-        </div>
-
-        {/* Help / Mock Credentials Panel */}
-        <div className="mt-lg bg-zinc-200/50 border border-borderLight rounded-card p-md text-xs text-textSecondary">
-          <p className="font-bold text-textPrimary mb-sm uppercase tracking-wider">Demo Access Accounts</p>
-          <div className="space-y-sm">
-            <div>
-              <p className="font-semibold text-textSecondary">Client Viewer:</p>
-              <p className="font-mono text-textMuted">Email: <span className="text-textPrimary">client@aeroview.com</span> / Pass: <span className="text-textPrimary">client123</span></p>
-            </div>
-            <div>
-              <p className="font-semibold text-textSecondary">Admin Upload Manager:</p>
-              <p className="font-mono text-textMuted">Email: <span className="text-textPrimary">admin@aeroview.com</span> / Pass: <span className="text-textPrimary">admin123</span></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); const [formError, setFormError] = useState('');
+  const { login, isAuthenticated, loading, user } = useAuth(); const navigate = useNavigate(); const location = useLocation();
+  useEffect(() => { if (isAuthenticated && user) navigate(user.role === 'admin' ? '/admin' : '/profile', { replace: true }); }, [isAuthenticated, user, navigate]);
+  useEffect(() => { if (new URLSearchParams(location.search).get('expired') === 'true') toast.error('Your session expired. Please sign in again.'); }, [location]);
+  const submit = async (event) => { event.preventDefault(); setFormError(''); if (!email || !password) return setFormError('Enter your email and password to continue.'); const result = await login(email, password); if (!result.success) return setFormError(result.error); navigate(result.user?.role === 'admin' ? '/admin' : '/profile', { replace: true }); };
+  return <div className="portal-page"><Toaster position="top-right" /><div className="portal-shell auth-shell">
+    <aside className="portal-sidebar auth-brand"><BrandMark /><div className="portal-rule" /><div className="auth-founder"><strong>AEROVIEW<br /><span>360</span></strong><p>Construction intelligence, presented clearly.</p></div><div className="auth-features"><p><FiShield /> Secure project access</p><p><FiUser /> Client-specific dashboards</p><p><FiLock /> Protected media & deliverables</p></div><div className="portal-client"><span>Precision in Data.</span><strong>Perfection in Visualization.</strong><small>© {new Date().getFullYear()} Aeroview 360</small></div></aside>
+    <main className="portal-main auth-main"><form onSubmit={submit} className="auth-form"><div className="portal-heading__avatar mx-auto"><FiUser /></div><h1>Welcome Back!</h1><p>Sign in to access your project dashboard</p><div className="portal-rule" />{formError && <div className="auth-error">{formError}</div>}<label>Login ID / Email<div className="auth-input"><FiUser /><input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your login ID or email" disabled={loading} /></div></label><label>Password<div className="auth-input"><FiLock /><input type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" disabled={loading} /><button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <FiEyeOff /> : <FiEye />}</button></div></label><div className="auth-options"><label><input type="checkbox" /> Remember me</label><span>Contact support for access</span></div><button className="auth-submit" disabled={loading}>{loading ? 'SIGNING IN…' : 'LOGIN'}</button><p className="auth-help">Your account is created by an Aeroview administrator.</p></form></main>
+  </div></div>;
 };
-
 export default Login;

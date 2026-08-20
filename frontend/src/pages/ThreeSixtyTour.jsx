@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import MonthlyCard from '../components/cards/MonthlyCard';
 import EmptyState from '../components/common/EmptyState';
-import { FiX, FiMaximize } from 'react-icons/fi';
+import { FiCalendar, FiInfo, FiX } from 'react-icons/fi';
 
 const ThreeSixtyTour = () => {
   // Extract monthly updates fetched in DashboardLayout context
@@ -35,18 +35,12 @@ const ThreeSixtyTour = () => {
 
   return (
     <div className="relative">
-      {/* Page Title & Details */}
-      <div className="mb-lg">
-        <h1 className="text-xl md:text-2xl font-bold text-textPrimary">360° Site Walkthroughs</h1>
-        <p className="text-sm text-textSecondary mt-xs">
-          Select a month to inspect the project site dynamically in fully interactive 360° high-resolution views.
-        </p>
-      </div>
+      <div className="section-title"><div className="section-title__icon"><FiCalendar /></div><div><h2>Monthly Tour</h2><p>Track site progress through monthly 360° virtual tours.</p></div></div>
 
       {panoramas.length === 0 ? (
         <EmptyState message="No 360° panoramas have been uploaded for this site yet." />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+        <div className="portal-grid portal-grid--two">
           {panoramas.map((pano) => (
             <MonthlyCard
               key={pano.panorama_id}
@@ -62,6 +56,7 @@ const ThreeSixtyTour = () => {
           ))}
         </div>
       )}
+      {panoramas.length > 0 && <div className="info-bar"><FiInfo /> Select any month to explore the interactive 360° panorama and project progress.</div>}
 
       {/* Pannellum Interactive 360 Lightbox Overlay */}
       {selectedTour && (

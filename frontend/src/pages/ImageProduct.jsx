@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import ImageGallery from 'react-image-gallery';
 import MonthlyCard from '../components/cards/MonthlyCard';
 import EmptyState from '../components/common/EmptyState';
-import { FiChevronLeft, FiDownload, FiMaximize2, FiFolder } from 'react-icons/fi';
+import { FiChevronLeft, FiDownload, FiImage, FiInfo, FiMaximize2, FiFolder } from 'react-icons/fi';
 import "react-image-gallery/styles/css/image-gallery.css";
 
 const ImageProduct = () => {
@@ -173,18 +173,12 @@ const ImageProduct = () => {
 
   return (
     <div>
-      {/* Title Panel */}
-      <div className="mb-lg">
-        <h1 className="text-xl md:text-2xl font-bold text-textPrimary">Site Photo Folders</h1>
-        <p className="text-sm text-textSecondary mt-xs">
-          Browse image category folders capturing foundation pouring, structural steel framing, utilities, and exterior completion.
-        </p>
-      </div>
+      <div className="section-title"><div className="section-title__icon"><FiImage /></div><div><h2>Project Image Folders</h2><p>Access and download project images organized by update and folder.</p></div></div>
 
       {folders.length === 0 ? (
         <EmptyState message="No tracking images have been uploaded for this site yet." />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+        <div className="portal-grid portal-grid--two">
           {folders.map((folder) => (
             <MonthlyCard
               key={folder.id}
@@ -199,6 +193,7 @@ const ImageProduct = () => {
           ))}
         </div>
       )}
+      {folders.length > 0 && <div className="info-bar"><FiInfo /> Open any folder to view full-resolution images and download individual files.</div>}
     </div>
   );
 };

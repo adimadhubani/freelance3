@@ -1,4 +1,4 @@
-const { Client, User, Site, MonthlyUpdate, Panorama, Video, Image, FinalProduct } = require('../models');
+const { sequelize, Client, User, Site, MonthlyUpdate, Panorama, Video, Image, FinalProduct } = require('../models');
 const bcrypt = require('bcryptjs');
 
 // Utility helper to get file URL depending on whether Cloudinary or Local is used
@@ -27,10 +27,25 @@ const getFileUrlAndPublicId = (req, file) => {
  */
 const createClient = async (req, res) => {
   try {
-    const { client_name } = req.body;
+    const { client_name, user_name, email, password } = req.body;
 
-    if (!client_name) {
-      return res.status(400).json({ error: 'Client name is required.' });
+    if (
+      typeof client_name !== 'string' || !client_name.trim() ||
+      typeof user_name !== 'string' || !user_name.trim() ||
+      typeof email !== 'string' || !email.trim() ||
+      typeof password !== 'string' || !password
+    ) {
+      return res.status(400).json({
+        error: 'Client name, user name, email, and password are required.',
+      });
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      return res.status(400).json({ error: 'Please provide a valid client login email.' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Client password must be at least 8 characters.' });
     }
 
     let logoUrl = null;
@@ -41,18 +56,50 @@ const createClient = async (req, res) => {
       logoUrl = req.body.company_logo_url;
     }
 
-    const client = await Client.create({
-      client_name,
-      company_logo: logoUrl,
-      status: 'Active',
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ where: { email: normalizedEmail } });
+    if (existingUser) {
+      return res.status(409).json({ error: 'A user with this email already exists.' });
+    }
+
+    // A client organization and its first login must be created together. If either
+    // operation fails, the transaction prevents an unusable partial client record.
+    const { client, user } = await sequelize.transaction(async (transaction) => {
+      const createdClient = await Client.create({
+        client_name: client_name.trim(),
+        company_logo: logoUrl,
+        status: 'Active',
+      }, { transaction });
+
+      const password_hash = await bcrypt.hash(password, 12);
+      const createdUser = await User.create({
+        client_id: createdClient.client_id,
+        name: user_name.trim(),
+        email: normalizedEmail,
+        password_hash,
+        role: 'client',
+        status: 'Active',
+      }, { transaction });
+
+      return { client: createdClient, user: createdUser };
     });
 
     res.status(201).json({
-      message: 'Client created successfully.',
+      message: 'Client and client login created successfully.',
       client,
+      user: {
+        user_id: user.user_id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        client_id: user.client_id,
+      },
     });
   } catch (error) {
     console.error('Create client error:', error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ error: 'A user with this email already exists.' });
+    }
     res.status(500).json({ error: 'Internal server error.' });
   }
 };
@@ -321,4 +368,3 @@ module.exports = {
   getClientsList,
   getSitesList,
 };
-
