@@ -1,0 +1,9 @@
+{
+  "short_name": "Aeroview 360",
+  "name": "Aeroview 360 - Construction Management Dashboard",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1a1a1a",
+  "background_color": "#f5f5f5"
+}

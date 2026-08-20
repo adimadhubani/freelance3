@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Button Styles */
+  .btn-primary {
+    @apply bg-primaryDark text-white hover:bg-primaryGray focus:ring-2 focus:ring-offset-2 focus:ring-primaryDark px-md py-sm rounded-button font-semibold transition-all duration-200 inline-flex items-center justify-center;
+  }
+
+  .btn-secondary {
+    @apply bg-white border border-primaryDark text-primaryDark hover:bg-bgLight focus:ring-2 focus:ring-offset-2 focus:ring-primaryDark px-md py-sm rounded-button font-semibold transition-all duration-200 inline-flex items-center justify-center;
+  }
+
+  .btn-ghost {
+    @apply text-primaryDark hover:bg-bgLight px-md py-sm rounded-button transition-all duration-200 inline-flex items-center justify-center;
+  }
+
+  .btn-danger {
+    @apply bg-errorRed text-white hover:bg-red-800 px-md py-sm rounded-button font-semibold transition-all duration-200 inline-flex items-center justify-center;
+  }
+
+  /* Card Styles */
+  .custom-card {
+    @apply bg-cardLight shadow-card rounded-card p-lg hover:shadow-cardHover transition-shadow duration-200 border border-borderLight;
+  }
+
+  /* Input Styles */
+  .form-input {
+    @apply w-full border border-borderLight bg-white rounded-input px-md py-sm focus:outline-none focus:border-primaryDark focus:ring-1 focus:ring-primaryDark transition-colors duration-200 placeholder-textLight text-textPrimary;
+  }
+
+  .form-label {
+    @apply block text-sm font-semibold text-textSecondary mb-sm;
+  }
+}
+
+/* Custom Scrollbar for professional interface */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bdbdbd;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #757575;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+  color: #1a1a1a;
+}
