@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import OtpLogin from './pages/OtpLogin';
 import ClientProfile from './pages/ClientProfile';
 import SiteSelection from './pages/SiteSelection';
 import ThreeSixtyTour from './pages/ThreeSixtyTour';
@@ -68,6 +70,8 @@ function App() {
         <Routes>
           {/* Public Auth Endpoint */}
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/login-otp" element={<OtpLogin />} />
 
           {/* Protected Client views */}
           <Route

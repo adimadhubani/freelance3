@@ -11,7 +11,7 @@ const api = axios.create({
 // Add request interceptor to attach JWT Token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,6 +30,8 @@ api.interceptors.response.use(
       // Auto-logout: clear token and user, redirect to login
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem('aeroview_user');
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem('aeroview_user');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login?expired=true';
       }

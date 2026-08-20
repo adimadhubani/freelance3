@@ -61,6 +61,13 @@ aeroview-360/
    PORT=5001
    DATABASE_URL=postgres://postgres:postgrespassword@localhost:5432/aeroview
    JWT_SECRET=super_secret_aeroview_360_jwt_token_key_12345
+   # SMTP is required for Login with OTP and Forgot Password emails
+   SMTP_HOST=smtp.example.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=your_smtp_username
+   SMTP_PASS=your_smtp_password
+   SMTP_FROM="Aeroview 360 <no-reply@example.com>"
    CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
    CLOUDINARY_API_KEY=your_cloudinary_api_key
    CLOUDINARY_API_SECRET=your_cloudinary_api_secret
@@ -116,3 +123,7 @@ Run the seeding script to register these accounts automatically:
    - **Email:** `admin@aeroview.com`
    - **Password:** `admin123`
    - **Role:** Create new client organizations, insert construction sites, upload progress percentages, upload panoramas/videos/photo folders, and submit schematics.
+
+## Email OTP and password reset
+
+Set the SMTP variables above, then users can choose **Login with OTP** or **Forgot password?** on the sign-in page. Codes are six digits, expire after 10 minutes, can be used once, and are limited to five verification attempts. “Remember me” keeps a session for 30 days; otherwise the browser session expires after one day and is cleared when the browser session ends.

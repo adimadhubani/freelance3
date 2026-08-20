@@ -12,8 +12,9 @@ export const AuthProvider = ({ children }) => {
   // Initialize Auth state from localStorage
   useEffect(() => {
     const initializeAuth = async () => {
-      const storedToken = localStorage.getItem(TOKEN_KEY);
-      const storedUser = localStorage.getItem(USER_KEY);
+      const storage = localStorage.getItem(TOKEN_KEY) ? localStorage : sessionStorage;
+      const storedToken = storage.getItem(TOKEN_KEY);
+      const storedUser = storage.getItem(USER_KEY);
 
       if (storedToken && storedUser) {
         setToken(storedToken);
@@ -23,7 +24,7 @@ export const AuthProvider = ({ children }) => {
           // Sync with server to verify token validity
           const res = await api.get('/auth/me');
           setUser(res.data.user);
-          localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
+        storage.setItem(USER_KEY, JSON.stringify(res.data.user));
         } catch (err) {
           console.error('Failed to restore session:', err);
           logout();
@@ -35,17 +36,24 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email, password) => {
+  const saveSession = (receivedToken, receivedUser, rememberMe) => {
+    const storage = rememberMe ? localStorage : sessionStorage;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
+    storage.setItem(TOKEN_KEY, receivedToken);
+    storage.setItem(USER_KEY, JSON.stringify(receivedUser));
+    setToken(receivedToken);
+    setUser(receivedUser);
+  };
+
+  const login = async (email, password, rememberMe = false) => {
     setLoading(true);
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', { email, password, remember_me: rememberMe });
       const { token: receivedToken, user: receivedUser } = response.data;
-
-      localStorage.setItem(TOKEN_KEY, receivedToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(receivedUser));
-
-      setToken(receivedToken);
-      setUser(receivedUser);
+      saveSession(receivedToken, receivedUser, rememberMe);
       return { success: true, user: receivedUser };
     } catch (error) {
       console.error('Login error:', error);
@@ -59,6 +67,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
     setToken(null);
     setUser(null);
   };
@@ -68,6 +78,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    saveSession,
     logout,
     isAuthenticated: !!token,
     isAdmin: user?.role === 'admin',

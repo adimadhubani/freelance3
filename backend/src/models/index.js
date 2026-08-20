@@ -7,10 +7,13 @@ const Panorama = require('./Panorama');
 const Video = require('./Video');
 const Image = require('./Image');
 const FinalProduct = require('./FinalProduct');
+const AuthOtp = require('./AuthOtp');
 
 // 1. Client & User: One Client has many Users
 Client.hasMany(User, { foreignKey: 'client_id', as: 'users', onDelete: 'CASCADE' });
 User.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
+User.hasMany(AuthOtp, { foreignKey: 'user_id', as: 'authOtps', onDelete: 'CASCADE' });
+AuthOtp.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 // 2. Client & Site: One Client has many Sites
 Client.hasMany(Site, { foreignKey: 'client_id', as: 'sites', onDelete: 'CASCADE' });
@@ -46,4 +49,5 @@ module.exports = {
   Video,
   Image,
   FinalProduct,
+  AuthOtp,
 };

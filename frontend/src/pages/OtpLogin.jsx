@@ -1,0 +1,15 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiCheckCircle, FiKey, FiMail, FiUser } from 'react-icons/fi';
+import AuthPageShell from '../components/common/AuthPageShell';
+import { useAuth } from '../hooks/useAuth';
+import api from '../services/api';
+
+const OtpLogin = () => {
+  const [email, setEmail] = useState(''); const [code, setCode] = useState(''); const [rememberMe, setRememberMe] = useState(false); const [sent, setSent] = useState(false); const [message, setMessage] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
+  const { saveSession } = useAuth(); const navigate = useNavigate();
+  const requestCode = async (event) => { event.preventDefault(); setError(''); setLoading(true); try { const result = await api.post('/auth/otp/login/request', { email }); setMessage(result.data.message); setSent(true); } catch (err) { setError(err.response?.data?.error || 'Unable to send a sign-in code.'); } finally { setLoading(false); } };
+  const verify = async (event) => { event.preventDefault(); setError(''); setLoading(true); try { const result = await api.post('/auth/otp/login/verify', { email, code, remember_me: rememberMe }); saveSession(result.data.token, result.data.user, rememberMe); navigate(result.data.user.role === 'admin' ? '/admin' : '/profile', { replace: true }); } catch (err) { setError(err.response?.data?.error || 'Unable to verify the code.'); } finally { setLoading(false); } };
+  return <AuthPageShell><form className="auth-form" onSubmit={sent ? verify : requestCode}><div className="portal-heading__avatar mx-auto"><FiUser /></div><h1>Login with OTP</h1><p>{sent ? 'Enter the 6-digit code sent to your email.' : 'Use a one-time code to access your dashboard.'}</p><div className="portal-rule" />{message && <div className="auth-success"><FiCheckCircle /> {message}</div>}{error && <div className="auth-error">{error}</div>}<label>Email address<div className="auth-input"><FiMail /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" disabled={sent || loading} required /></div></label>{sent && <><label>6-digit verification code<div className="auth-input"><FiKey /><input inputMode="numeric" pattern="[0-9]{6}" maxLength="6" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="000000" autoFocus required /></div></label><div className="auth-options"><label><input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} /> Remember me</label><button type="button" onClick={() => setSent(false)}>Resend / change email</button></div></>}<button className="auth-submit" disabled={loading}>{loading ? 'PLEASE WAIT…' : sent ? 'VERIFY & SIGN IN' : 'SEND LOGIN CODE'}</button><button type="button" className="auth-back" onClick={() => navigate('/login')}><FiArrowLeft /> Back to sign in</button></form></AuthPageShell>;
+};
+export default OtpLogin;
