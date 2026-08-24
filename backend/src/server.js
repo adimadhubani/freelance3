@@ -12,8 +12,18 @@ const PORT = process.env.PORT || 5001;
 // Allowed origins for CORS
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  'http://localhost:3001',
+  'https://freelance3-zeta.vercel.app',
+  'https://freelance3-zeta.vercel.app/login',
+  'https://freelance3-zeta.vercel.app/profile',
+  'https://freelance3-zeta.vercel.app/sites',
+  'https://freelance3-zeta.vercel.app/admin',
+  'https://aeroview-360.vercel.app',
+  'https://aeroview-360.vercel.app/login',
+  'https://aeroview-360.vercel.app/profile',
+  'https://aeroview-360.vercel.app/sites',
+  'https://aeroview-360.vercel.app/admin',
+  // Add any other frontend URLs you have
 ];
 
 const corsOptions = {
@@ -22,13 +32,14 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log(`❌ CORS blocked: ${origin}`);
       callback(new Error(`CORS: origin ${origin} not allowed`));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
-  optionsSuccessStatus: 200, // Fixes preflight 204 issues on some browsers
+  optionsSuccessStatus: 200,
 };
 
 // Handle all OPTIONS preflight requests BEFORE any other middleware
@@ -40,7 +51,7 @@ app.use(cors(corsOptions));
 // Basic Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // increased for dev convenience
+  max: 200,
   message: { error: 'Too many requests from this IP. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -63,6 +74,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve locally-uploaded files (fallback when Cloudinary not configured)
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+// ✅ LOGGING - Debug requests
+app.use((req, res, next) => {
+  console.log(`📝 ${req.method} ${req.url}`);
+  console.log(`📍 Origin: ${req.headers.origin || 'No origin'}`);
+  next();
+});
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -78,9 +95,23 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ✅ Root endpoint (for testing)
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Aeroview 360 API is running',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth',
+      client: '/api/client',
+      admin: '/api/admin',
+      health: '/api/health'
+    }
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled server error:', err);
+  console.error('❌ Unhandled server error:', err);
   res.status(err.status || 500).json({
     error: err.message || 'Internal server error.',
   });
@@ -89,19 +120,18 @@ app.use((err, req, res, next) => {
 // Connect to Database and start server
 const startServer = async () => {
   try {
-    // Authenticate connection
     await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
+    console.log('✅ Database connection has been established successfully.');
 
-    // Sync database models (alter: true automatically updates schemas safely during development)
     await sequelize.sync({ alter: true });
-    console.log('Database models synchronized successfully.');
+    console.log('✅ Database models synchronized successfully.');
 
     app.listen(PORT, () => {
-      console.log(`Aeroview 360 backend is running on port ${PORT}`);
+      console.log(`🚀 Aeroview 360 backend is running on port ${PORT}`);
+      console.log(`📍 CORS allowed origins: ${allowedOrigins.length} origins`);
     });
   } catch (error) {
-    console.error('Unable to connect to the database or start the server:', error);
+    console.error('❌ Unable to connect to the database or start the server:', error);
     process.exit(1);
   }
 };
