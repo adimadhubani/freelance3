@@ -1,26 +1,7 @@
 const { sequelize, Client, User, Site, MonthlyUpdate, Panorama, Video, Image, FinalProduct } = require('../models');
 const bcrypt = require('bcryptjs');
-
-// Utility helper to get file URL depending on whether Cloudinary or Local is used
-const getFileUrlAndPublicId = (req, file) => {
-  if (!file) return { url: null, publicId: null };
-
-  // If local disk storage is used, translate local path to a web URL path
-  const isCloudinary = file.path.startsWith('http://') || file.path.startsWith('https://');
-  if (isCloudinary) {
-    return {
-      url: file.path,
-      publicId: file.filename || null,
-    };
-  } else {
-    // Local storage path: serve via '/uploads/{filename}'
-    const url = `/uploads/${file.filename}`;
-    return {
-      url,
-      publicId: file.filename,
-    };
-  }
-};
+const { v4: uuidv4 } = require('uuid');
+const { uploadToCloudinary, uploadToCloudinaryBuffer } = require('../utils/cloudinaryUpload');
 
 /**
  * Admin: Create a new Client
@@ -50,8 +31,8 @@ const createClient = async (req, res) => {
 
     let logoUrl = null;
     if (req.files && req.files.company_logo) {
-      const { url } = getFileUrlAndPublicId(req, req.files.company_logo[0]);
-      logoUrl = url;
+      const result = await uploadToCloudinaryBuffer(req.files.company_logo[0], { folder: 'aeroview/clients/logos' });
+      logoUrl = result.url;
     } else if (req.body.company_logo_url) {
       logoUrl = req.body.company_logo_url;
     }
@@ -62,8 +43,6 @@ const createClient = async (req, res) => {
       return res.status(409).json({ error: 'A user with this email already exists.' });
     }
 
-    // A client organization and its first login must be created together. If either
-    // operation fails, the transaction prevents an unusable partial client record.
     const { client, user } = await sequelize.transaction(async (transaction) => {
       const createdClient = await Client.create({
         client_name: client_name.trim(),
@@ -109,22 +88,32 @@ const createClient = async (req, res) => {
  */
 const createSite = async (req, res) => {
   try {
-    const { client_id, site_name, location, status, start_date, completion_date } = req.body;
+    const { client_id, site_name, location, latitude, longitude, google_maps_url, status, start_date, completion_date } = req.body;
 
     if (!client_id || !site_name) {
       return res.status(400).json({ error: 'client_id and site_name are required.' });
     }
 
-    // Verify client exists
     const client = await Client.findByPk(client_id);
     if (!client) {
       return res.status(404).json({ error: 'Client not found.' });
+    }
+
+    const latVal = latitude !== undefined && latitude !== '' && latitude !== null ? parseFloat(latitude) : null;
+    const lngVal = longitude !== undefined && longitude !== '' && longitude !== null ? parseFloat(longitude) : null;
+
+    let mapsUrl = google_maps_url || null;
+    if ((latVal !== null && lngVal !== null) && (!mapsUrl || !mapsUrl.trim())) {
+      mapsUrl = `https://www.google.com/maps?q=${latVal},${lngVal}`;
     }
 
     const site = await Site.create({
       client_id,
       site_name,
       location,
+      latitude: latVal,
+      longitude: lngVal,
+      google_maps_url: mapsUrl,
       status: status || 'Active',
       start_date: start_date || null,
       completion_date: completion_date || null,
@@ -141,7 +130,7 @@ const createSite = async (req, res) => {
 };
 
 /**
- * Admin: Upload Monthly data
+ * Admin: Upload Monthly data (Supports local upload & URL, 360° videos, and PDF raw uploads)
  */
 const uploadMonthlyData = async (req, res) => {
   try {
@@ -154,6 +143,7 @@ const uploadMonthlyData = async (req, res) => {
       panorama_title,
       video_title,
       video_type,
+      video_360_title,
       folder_name,
     } = req.body;
 
@@ -161,13 +151,11 @@ const uploadMonthlyData = async (req, res) => {
       return res.status(400).json({ error: 'site_id, month, and year are required.' });
     }
 
-    // Check if site exists
     const site = await Site.findByPk(site_id);
     if (!site) {
       return res.status(404).json({ error: 'Site not found.' });
     }
 
-    // Find or create the MonthlyUpdate record
     let [monthlyUpdate, created] = await MonthlyUpdate.findOrCreate({
       where: { site_id, month: parseInt(month), year: parseInt(year) },
       defaults: {
@@ -177,7 +165,6 @@ const uploadMonthlyData = async (req, res) => {
       },
     });
 
-    // If update existed, update progress percentage and notes
     if (!created) {
       if (progress_percentage !== undefined) {
         monthlyUpdate.progress_percentage = parseInt(progress_percentage);
@@ -189,14 +176,15 @@ const uploadMonthlyData = async (req, res) => {
     }
 
     const updateId = monthlyUpdate.update_id;
+    const folderBase = `clients/${site.client_id}/sites/${site_id}/${year}/${String(month).padStart(2, '0')}`;
 
     // 1. Handle Panorama
     let panoramaUrl = null;
     let panoramaPublicId = null;
     if (req.files && req.files.panorama_file) {
-      const { url, publicId } = getFileUrlAndPublicId(req, req.files.panorama_file[0]);
-      panoramaUrl = url;
-      panoramaPublicId = publicId;
+      const result = await uploadToCloudinaryBuffer(req.files.panorama_file[0], { folder: `${folderBase}/panoramas` });
+      panoramaUrl = result.url;
+      panoramaPublicId = result.publicId;
     } else if (req.body.tour_url) {
       panoramaUrl = req.body.tour_url;
     }
@@ -206,53 +194,126 @@ const uploadMonthlyData = async (req, res) => {
         update_id: updateId,
         title: panorama_title || `Panorama ${month}/${year}`,
         tour_url: panoramaUrl,
-        thumbnail_url: panoramaUrl, // For simple panoramas, we can use same url or generic thumbnail
+        thumbnail_url: panoramaUrl,
         cloudinary_public_id: panoramaPublicId,
       });
     }
 
-    // 2. Handle Video
+    // 2. Handle Regular Video (Walkthrough / Flythrough)
     let videoUrl = null;
     let videoPublicId = null;
+    let videoSource = 'uploaded';
+
     if (req.files && req.files.video_file) {
-      const { url, publicId } = getFileUrlAndPublicId(req, req.files.video_file[0]);
-      videoUrl = url;
-      videoPublicId = publicId;
+      const result = await uploadToCloudinaryBuffer(req.files.video_file[0], { folder: `${folderBase}/videos` });
+      videoUrl = result.url;
+      videoPublicId = result.publicId;
+      videoSource = 'uploaded';
     } else if (req.body.video_url) {
       videoUrl = req.body.video_url;
+      const lowerUrl = videoUrl.toLowerCase();
+      if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+        videoSource = 'youtube';
+      } else if (lowerUrl.includes('vimeo.com')) {
+        videoSource = 'vimeo';
+      } else {
+        videoSource = 'url';
+      }
     }
 
     if (videoUrl) {
+      const is360Flag = video_type === '360' || req.body.is_360 === 'true' || req.body.is_360 === true;
       await Video.create({
         update_id: updateId,
         title: video_title || `Video Walkthrough ${month}/${year}`,
-        video_type: video_type || 'walkthrough', // walkthrough, flythrough
+        video_type: video_type || 'walkthrough',
+        video_source: videoSource,
+        is_360: is360Flag,
         video_url: videoUrl,
-        thumbnail_url: null, // video thumbnail is extracted or defaults to play icon
+        thumbnail_url: null,
         cloudinary_public_id: videoPublicId,
       });
     }
 
-    // 3. Handle Images (Multiple)
+    // 2b. Handle 360° Video
+    let video360Url = null;
+    let video360PublicId = null;
+    let video360Source = 'uploaded';
+
+    if (req.files && req.files.video_360_file) {
+      const result = await uploadToCloudinaryBuffer(req.files.video_360_file[0], { folder: `${folderBase}/videos_360` });
+      video360Url = result.url;
+      video360PublicId = result.publicId;
+      video360Source = 'uploaded';
+    } else if (req.body.video_360_url) {
+      video360Url = req.body.video_360_url;
+      const lowerUrl = video360Url.toLowerCase();
+      if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+        video360Source = 'youtube';
+      } else if (lowerUrl.includes('vimeo.com')) {
+        video360Source = 'vimeo';
+      } else {
+        video360Source = 'url';
+      }
+    }
+
+    if (video360Url) {
+      await Video.create({
+        update_id: updateId,
+        title: video_360_title || `360° Video Tour ${month}/${year}`,
+        video_type: '360',
+        video_source: video360Source,
+        is_360: true,
+        video_url: video360Url,
+        thumbnail_url: null,
+        cloudinary_public_id: video360PublicId,
+      });
+    }
+
+    // 3. Handle Images and PDFs (Uploading PDFs as raw resources)
     if (req.files && req.files.image_files) {
-      const imagesToCreate = req.files.image_files.map((file) => {
-        const { url, publicId } = getFileUrlAndPublicId(req, file);
+      const imagesToCreate = [];
+      for (const file of req.files.image_files) {
+        try {
+          const cleanName = file.originalname.replace(/\s+/g, '_');
+          const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
+          const folder = `${folderBase}/images`;
+
+          const result = await uploadToCloudinary(file.buffer, {
+            folder: folder,
+            resource_type: isPdf ? 'raw' : 'image',
+            public_id: cleanName.replace(/\.[^.]+$/, ''),
+          });
+
+          imagesToCreate.push({
+            image_id: uuidv4(),
+            update_id: updateId,
+            folder_name: folder_name || 'General',
+            image_url: result.secure_url || result.url,
+            cloudinary_public_id: result.public_id,
+            file_type: isPdf ? 'pdf' : 'image',
+            original_name: cleanName,
+          });
+        } catch (err) {
+          console.error('Upload error:', err.message);
+        }
+      }
+      if (imagesToCreate.length > 0) {
+        await Image.bulkCreate(imagesToCreate);
+      }
+    } else if (req.body.image_urls) {
+      const urls = req.body.image_urls.split(',').map((u) => u.trim()).filter(Boolean);
+      const imagesToCreate = urls.map((url) => {
+        const isPdf = url.toLowerCase().endsWith('.pdf');
         return {
+          image_id: uuidv4(),
           update_id: updateId,
           folder_name: folder_name || 'General',
           image_url: url,
-          cloudinary_public_id: publicId,
+          file_type: isPdf ? 'pdf' : 'image',
+          original_name: url.split('/').pop() || 'file',
         };
       });
-      await Image.bulkCreate(imagesToCreate);
-    } else if (req.body.image_urls) {
-      // Direct URLs fallback
-      const urls = req.body.image_urls.split(',').map((u) => u.trim());
-      const imagesToCreate = urls.map((url) => ({
-        update_id: updateId,
-        folder_name: folder_name || 'General',
-        image_url: url,
-      }));
       await Image.bulkCreate(imagesToCreate);
     }
 
@@ -262,7 +323,7 @@ const uploadMonthlyData = async (req, res) => {
     });
   } catch (error) {
     console.error('Upload monthly data error:', error);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: error.message || 'Internal server error.' });
   }
 };
 
@@ -277,27 +338,25 @@ const uploadFinalProduct = async (req, res) => {
       return res.status(400).json({ error: 'site_id, product_type, and title are required.' });
     }
 
-    // Check if site exists
     const site = await Site.findByPk(site_id);
     if (!site) {
       return res.status(404).json({ error: 'Site not found.' });
     }
 
-    // Resolve file URLs
     let productUrl = null;
     let productPublicId = null;
     if (req.files && req.files.product_file) {
-      const { url, publicId } = getFileUrlAndPublicId(req, req.files.product_file[0]);
-      productUrl = url;
-      productPublicId = publicId;
+      const result = await uploadToCloudinaryBuffer(req.files.product_file[0], { folder: `aeroview/sites/${site_id}/blueprints` });
+      productUrl = result.url;
+      productPublicId = result.publicId;
     } else if (req.body.product_url) {
       productUrl = req.body.product_url;
     }
 
     let previewUrl = null;
     if (req.files && req.files.preview_file) {
-      const { url } = getFileUrlAndPublicId(req, req.files.preview_file[0]);
-      previewUrl = url;
+      const result = await uploadToCloudinaryBuffer(req.files.preview_file[0], { folder: `aeroview/sites/${site_id}/previews` });
+      previewUrl = result.url;
     } else if (req.body.preview_url) {
       previewUrl = req.body.preview_url;
     }
@@ -308,9 +367,9 @@ const uploadFinalProduct = async (req, res) => {
 
     const finalProduct = await FinalProduct.create({
       site_id,
-      product_type, // elevation, top-view
+      product_type,
       title,
-      preview_url: previewUrl || productUrl, // fallback preview to main file
+      preview_url: previewUrl || productUrl,
       file_url: productUrl,
       cloudinary_public_id: productPublicId,
     });
@@ -321,7 +380,7 @@ const uploadFinalProduct = async (req, res) => {
     });
   } catch (error) {
     console.error('Upload final product error:', error);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: error.message || 'Internal server error.' });
   }
 };
 

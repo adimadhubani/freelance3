@@ -17,7 +17,16 @@ const Video = sequelize.define('Video', {
   },
   video_type: {
     type: DataTypes.STRING,
-    defaultValue: 'walkthrough', // walkthrough, flythrough
+    defaultValue: 'walkthrough', // walkthrough, flythrough, 360
+  },
+  video_source: {
+    type: DataTypes.STRING, // 'uploaded', 'url', 'youtube', 'vimeo'
+    allowNull: true,
+    defaultValue: 'uploaded',
+  },
+  is_360: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
   thumbnail_url: {
     type: DataTypes.TEXT,

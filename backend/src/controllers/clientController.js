@@ -111,7 +111,7 @@ const getSiteDashboard = async (req, res) => {
       return res.status(404).json({ error: 'Site not found or access denied.' });
     }
 
-    // Retrieve Monthly Updates with nested media
+    // Retrieve Monthly Updates with nested media (including file_type, original_name, is_360, video_source)
     const monthlyUpdates = await MonthlyUpdate.findAll({
       where: { site_id: siteId },
       include: [

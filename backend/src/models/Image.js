@@ -16,6 +16,15 @@ const Image = sequelize.define('Image', {
     allowNull: false,
     defaultValue: 'General',
   },
+  file_type: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'image', // image, pdf, document
+  },
+  original_name: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   image_url: {
     type: DataTypes.TEXT,
     allowNull: false,

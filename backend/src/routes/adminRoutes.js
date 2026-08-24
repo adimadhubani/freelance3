@@ -1,7 +1,7 @@
 const express = require('express');
 const { createClient, createSite, uploadMonthlyData, uploadFinalProduct, getClientsList, getSitesList } = require('../controllers/adminController');
 const { authenticate, authorize } = require('../middleware/auth');
-const { upload } = require('../middleware/upload');
+const { upload, handleMulterError } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -19,6 +19,7 @@ router.get('/sites-list', getSitesList);
 router.post(
   '/clients',
   upload.fields([{ name: 'company_logo', maxCount: 1 }]),
+  handleMulterError,
   createClient
 );
 
@@ -31,8 +32,10 @@ router.post(
   upload.fields([
     { name: 'panorama_file', maxCount: 1 },
     { name: 'video_file', maxCount: 1 },
+    { name: 'video_360_file', maxCount: 1 },
     { name: 'image_files', maxCount: 20 },
   ]),
+  handleMulterError,
   uploadMonthlyData
 );
 
@@ -43,8 +46,8 @@ router.post(
     { name: 'product_file', maxCount: 1 },
     { name: 'preview_file', maxCount: 1 },
   ]),
+  handleMulterError,
   uploadFinalProduct
 );
 
 module.exports = router;
-

@@ -82,6 +82,8 @@ const AdminDashboard = () => {
   const [siteClientId, setSiteClientId] = useState('');
   const [siteName, setSiteName] = useState('');
   const [siteLocation, setSiteLocation] = useState('');
+  const [siteLatitude, setSiteLatitude] = useState('');
+  const [siteLongitude, setSiteLongitude] = useState('');
   const [siteStatus, setSiteStatus] = useState('Active');
   const [startDate, setStartDate] = useState('');
   const [completionDate, setCompletionDate] = useState('');
@@ -96,6 +98,8 @@ const AdminDashboard = () => {
         client_id: siteClientId,
         site_name: siteName,
         location: siteLocation,
+        latitude: siteLatitude,
+        longitude: siteLongitude,
         status: siteStatus,
         start_date: startDate,
         completion_date: completionDate,
@@ -103,6 +107,8 @@ const AdminDashboard = () => {
       toast.success('Project Site created successfully!');
       setSiteName('');
       setSiteLocation('');
+      setSiteLatitude('');
+      setSiteLongitude('');
       setStartDate('');
       setCompletionDate('');
       loadSelectors();
@@ -129,6 +135,11 @@ const AdminDashboard = () => {
   const [mVidFile, setMVidFile] = useState(null);
   const [mVidUrl, setMVidUrl] = useState('');
 
+  const [m360VidTitle, setM360VidTitle] = useState('');
+  const [m360VidType, setM360VidType] = useState('360');
+  const [m360VidFile, setM360VidFile] = useState(null);
+  const [m360VidUrl, setM360VidUrl] = useState('');
+
   const [mImgFolder, setMImgFolder] = useState('General');
   const [mImgFiles, setMImgFiles] = useState(null);
   const [mImgUrls, setMImgUrls] = useState('');
@@ -151,13 +162,21 @@ const AdminDashboard = () => {
     if (mPanoFile) formData.append('panorama_file', mPanoFile);
     if (mPanoUrl) formData.append('tour_url', mPanoUrl);
 
-    // Video
+    // Video (Standard Walkthrough/Flythrough)
     formData.append('video_title', mVidTitle);
     formData.append('video_type', mVidType);
     if (mVidFile) formData.append('video_file', mVidFile);
     if (mVidUrl) formData.append('video_url', mVidUrl);
 
-    // Images
+    // 360° Video
+    formData.append('video_360_title', m360VidTitle);
+    if (m360VidFile || m360VidUrl) {
+      formData.append('is_360', 'true');
+    }
+    if (m360VidFile) formData.append('video_360_file', m360VidFile);
+    if (m360VidUrl) formData.append('video_360_url', m360VidUrl);
+
+    // Images & PDFs
     formData.append('folder_name', mImgFolder);
     if (mImgFiles) {
       for (let i = 0; i < mImgFiles.length; i++) {
@@ -177,6 +196,9 @@ const AdminDashboard = () => {
       setMVidTitle('');
       setMVidFile(null);
       setMVidUrl('');
+      setM360VidTitle('');
+      setM360VidFile(null);
+      setM360VidUrl('');
       setMImgFiles(null);
       setMImgUrls('');
     } catch (err) {
@@ -404,6 +426,41 @@ const AdminDashboard = () => {
                 className="form-input"
               />
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <div>
+                <label className="form-label">Latitude (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 28.6139"
+                  value={siteLatitude}
+                  onChange={(e) => setSiteLatitude(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+              <div>
+                <label className="form-label">Longitude (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 77.2090"
+                  value={siteLongitude}
+                  onChange={(e) => setSiteLongitude(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+            </div>
+            {siteLatitude && siteLongitude && (
+              <div className="text-xs text-textSecondary bg-bgLight p-xs rounded border border-borderLight flex items-center justify-between">
+                <span>Google Maps URL Preview: https://www.google.com/maps?q={siteLatitude},{siteLongitude}</span>
+                <a
+                  href={`https://www.google.com/maps?q=${siteLatitude},${siteLongitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primaryDark underline font-semibold hover:text-black"
+                >
+                  Test Link
+                </a>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
               <div>
                 <label className="form-label">Project Status</label>
@@ -446,9 +503,14 @@ const AdminDashboard = () => {
         {/* Tab 3: Monthly data & file uploads */}
         {activeTab === 'monthly' && (
           <form onSubmit={handleMonthlySubmit} className="space-y-md">
-            <div className="border-b border-borderLight pb-sm mb-md flex items-center gap-xs">
-              <FiTrendingUp className="text-primaryDark" />
-              <h3 className="text-base font-bold text-textPrimary">Upload Monthly Tracking Data</h3>
+            <div className="border-b border-borderLight pb-sm mb-md flex flex-col sm:flex-row sm:items-center justify-between gap-xs">
+              <div className="flex items-center gap-xs">
+                <FiTrendingUp className="text-primaryDark" />
+                <h3 className="text-base font-bold text-textPrimary">Upload Monthly Tracking Data</h3>
+              </div>
+              <span className="text-xs bg-bgLight px-sm py-xs rounded border border-borderLight text-textSecondary font-medium">
+                Max Limits: Videos 200MB | PDFs 100MB | Photos 10MB
+              </span>
             </div>
 
             {/* Core Update details */}
@@ -516,7 +578,7 @@ const AdminDashboard = () => {
 
             {/* Media 1: Panorama */}
             <div className="border-t border-borderLight pt-md mt-lg">
-              <h4 className="font-bold text-sm text-textSecondary mb-sm">Media A: 360° Panorama Tour</h4>
+              <h4 className="font-bold text-sm text-textSecondary mb-sm">Media A: 360° Panorama Tour Image</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
                 <div className="md:col-span-1">
                   <label className="form-label">Panorama Title</label>
@@ -552,7 +614,10 @@ const AdminDashboard = () => {
 
             {/* Media 2: Video */}
             <div className="border-t border-borderLight pt-md mt-lg">
-              <h4 className="font-bold text-sm text-textSecondary mb-sm">Media B: Progress Drone/Walkthrough Video</h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-sm">
+                <h4 className="font-bold text-sm text-textSecondary">Media B: Progress Drone/Walkthrough Video</h4>
+                <span className="text-xs text-textMuted italic">Upload from local OR provide URL (both optional)</span>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-md">
                 <div className="md:col-span-1">
                   <label className="form-label">Video Title</label>
@@ -573,10 +638,11 @@ const AdminDashboard = () => {
                   >
                     <option value="walkthrough">Walkthrough</option>
                     <option value="flythrough">Flythrough (Drone)</option>
+                    <option value="360">360° Video</option>
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">Video File</label>
+                  <label className="form-label">Video File (Local)</label>
                   <input
                     type="file"
                     onChange={(e) => setMVidFile(e.target.files[0])}
@@ -585,7 +651,7 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Video URL Fallback</label>
+                  <label className="form-label">Video Direct URL</label>
                   <input
                     type="text"
                     placeholder="https://commondatastorage.googleapis.com/.../ForBiggerBlazes.mp4"
@@ -597,9 +663,51 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Media 3: Progress photos */}
+            {/* Media D: 360° Video Tour */}
             <div className="border-t border-borderLight pt-md mt-lg">
-              <h4 className="font-bold text-sm text-textSecondary mb-sm">Media C: Progress photo folder</h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-sm">
+                <h4 className="font-bold text-sm text-textSecondary">Media D: 360° Video Tour</h4>
+                <span className="text-xs text-textMuted italic">Dedicated 360° video file or direct URL</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
+                <div>
+                  <label className="form-label">360 Video Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Site Entrance 360 Video"
+                    value={m360VidTitle}
+                    onChange={(e) => setM360VidTitle(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">360 Video File (Local)</label>
+                  <input
+                    type="file"
+                    onChange={(e) => setM360VidFile(e.target.files[0])}
+                    className="form-input"
+                    accept="video/*"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">360 Video Direct URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://example.com/360video.mp4"
+                    value={m360VidUrl}
+                    onChange={(e) => setM360VidUrl(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Media C: Progress photos & documents */}
+            <div className="border-t border-borderLight pt-md mt-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-sm">
+                <h4 className="font-bold text-sm text-textSecondary">Media C: Progress Photos & PDF Documents</h4>
+                <span className="text-xs text-textMuted italic">Supports: JPG, PNG, GIF, WEBP, PDF</span>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
                 <div>
                   <label className="form-label">Folder Name / Class</label>
@@ -612,20 +720,20 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Upload multiple photos</label>
+                  <label className="form-label">Upload Files (Images & PDFs)</label>
                   <input
                     type="file"
                     multiple
                     onChange={(e) => setMImgFiles(e.target.files)}
                     className="form-input"
-                    accept="image/*"
+                    accept="image/*,application/pdf"
                   />
                 </div>
                 <div>
-                  <label className="form-label">Image URLs Fallback (comma-separated)</label>
+                  <label className="form-label">File URLs Fallback (comma-separated)</label>
                   <input
                     type="text"
-                    placeholder="https://example.com/a.jpg, https://example.com/b.jpg"
+                    placeholder="https://example.com/a.jpg, https://example.com/doc.pdf"
                     value={mImgUrls}
                     onChange={(e) => setMImgUrls(e.target.value)}
                     className="form-input"
