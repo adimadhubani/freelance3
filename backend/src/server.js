@@ -13,17 +13,13 @@ const PORT = process.env.PORT || 5001;
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://freelance3-theta.vercel.app',        // ✅ Your domain
+  'https://freelance3-theta.vercel.app/login',
+  'https://freelance3-theta.vercel.app/profile',
+  'https://freelance3-theta.vercel.app/sites',
+  'https://freelance3-theta.vercel.app/admin',
   'https://freelance3-zeta.vercel.app',
-  'https://freelance3-zeta.vercel.app/login',
-  'https://freelance3-zeta.vercel.app/profile',
-  'https://freelance3-zeta.vercel.app/sites',
-  'https://freelance3-zeta.vercel.app/admin',
   'https://aeroview-360.vercel.app',
-  'https://aeroview-360.vercel.app/login',
-  'https://aeroview-360.vercel.app/profile',
-  'https://aeroview-360.vercel.app/sites',
-  'https://aeroview-360.vercel.app/admin',
-  // Add any other frontend URLs you have
 ];
 
 const corsOptions = {
@@ -87,6 +83,11 @@ app.use('/api/client', require('./routes/clientRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 
 // Health check endpoint
+// ✅ Add this BEFORE /api/health
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
