@@ -1,5 +1,32 @@
 const express = require('express');
-const { createClient, createSite, uploadMonthlyData, uploadFinalProduct, getClientsList, getSitesList } = require('../controllers/adminController');
+const {
+  // Create
+  createClient,
+  createSite,
+  uploadMonthlyData,
+  uploadFinalProduct,
+  // Selectors
+  getClientsList,
+  getSitesList,
+  // Client CRUD
+  getAllClients,
+  getClientById,
+  updateClient,
+  deleteClient,
+  // Site CRUD
+  getAllSites,
+  getSiteById,
+  updateSite,
+  deleteSite,
+  // Monthly Update CRUD
+  getAllMonthlyUpdates,
+  updateMonthlyUpdate,
+  deleteMonthlyUpdate,
+  // Final Product CRUD
+  getAllFinalProducts,
+  updateFinalProduct,
+  deleteFinalProduct,
+} = require('../controllers/adminController');
 const { authenticate, authorize } = require('../middleware/auth');
 const { upload, handleMulterError } = require('../middleware/upload');
 
@@ -9,12 +36,13 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorize('admin'));
 
+// ─── Selector lists (for form dropdowns) ────────────────────────────────────
 // GET /api/admin/clients-list
 router.get('/clients-list', getClientsList);
-
 // GET /api/admin/sites-list
 router.get('/sites-list', getSitesList);
 
+// ─── Create routes ────────────────────────────────────────────────────────────
 // POST /api/admin/clients
 router.post(
   '/clients',
@@ -49,5 +77,41 @@ router.post(
   handleMulterError,
   uploadFinalProduct
 );
+
+// ─── Client CRUD ─────────────────────────────────────────────────────────────
+// GET /api/admin/clients
+router.get('/clients', getAllClients);
+// GET /api/admin/clients/:clientId
+router.get('/clients/:clientId', getClientById);
+// PUT /api/admin/clients/:clientId
+router.put('/clients/:clientId', updateClient);
+// DELETE /api/admin/clients/:clientId
+router.delete('/clients/:clientId', deleteClient);
+
+// ─── Site CRUD ───────────────────────────────────────────────────────────────
+// GET /api/admin/sites
+router.get('/sites', getAllSites);
+// GET /api/admin/sites/:siteId
+router.get('/sites/:siteId', getSiteById);
+// PUT /api/admin/sites/:siteId
+router.put('/sites/:siteId', updateSite);
+// DELETE /api/admin/sites/:siteId
+router.delete('/sites/:siteId', deleteSite);
+
+// ─── Monthly Update CRUD ─────────────────────────────────────────────────────
+// GET /api/admin/monthly-updates
+router.get('/monthly-updates', getAllMonthlyUpdates);
+// PUT /api/admin/monthly-updates/:updateId
+router.put('/monthly-updates/:updateId', updateMonthlyUpdate);
+// DELETE /api/admin/monthly-updates/:updateId
+router.delete('/monthly-updates/:updateId', deleteMonthlyUpdate);
+
+// ─── Final Product CRUD ──────────────────────────────────────────────────────
+// GET /api/admin/final-products
+router.get('/final-products', getAllFinalProducts);
+// PUT /api/admin/final-products/:productId
+router.put('/final-products/:productId', updateFinalProduct);
+// DELETE /api/admin/final-products/:productId
+router.delete('/final-products/:productId', deleteFinalProduct);
 
 module.exports = router;

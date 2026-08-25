@@ -55,6 +55,7 @@ const DashboardLayout = () => {
             onMenuToggle={toggleSidebar}
             clientLogo={user?.company_logo}
             clientName={user?.client_name}
+            userName={user?.name}  // ✅ Added
           />
 
           {/* Dynamic Outlet Component Grid */}

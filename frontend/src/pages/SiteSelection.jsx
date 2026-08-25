@@ -84,23 +84,9 @@ const SiteSelection = () => {
 
           {/* Avatar: client logo → initials → icon fallback */}
           <div className="selection-head">
-            <div className="portal-heading__avatar">
-              {(user?.company_logo || profile?.company_logo) ? (
-                <img
-                  src={user?.company_logo || profile?.company_logo}
-                  alt={user?.client_name || profile?.client_name || 'Client'}
-                  className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
-                />
-              ) : (user?.client_name || profile?.client_name) ? (
-                <div className="w-10 h-10 rounded-full bg-primaryDark text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                  {(user?.client_name || profile?.client_name).slice(0, 2).toUpperCase()}
-                </div>
-              ) : (
-                <FiUser />
-              )}
-            </div>
-            <h1>Welcome Back!</h1>
-            <p>Select a site to access your dashboard</p>
+            <div className='profile-company'>{profile.company_logo ? <img src={profile.company_logo} alt="Company logo" /> : <div>{profile.client_name.slice(0, 2)}</div>}</div>
+            <h1>Welcome Back, {user?.name?.split(' ')[0]}!</h1>
+            <p>Here is your project portfolio at a glance</p>
             <div className="portal-rule" />
           </div>
 

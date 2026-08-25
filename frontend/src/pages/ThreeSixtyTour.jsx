@@ -37,7 +37,7 @@ const ThreeSixtyTour = () => {
             ...vid,
             month: update.month,
             year: update.year,
-            progress: update.progress_percentage,
+            // ✅ Removed progress from video cards
             notes: update.notes,
             update_date: update.update_date,
           });
@@ -63,20 +63,20 @@ const ThreeSixtyTour = () => {
 
   const getMonthName = (month) => {
     const names = ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December'];
+      'July', 'August', 'September', 'October', 'November', 'December'];
     return names[month - 1] || `Month ${month}`;
   };
 
   return (
     <div className="relative space-y-xl">
       {/* 360° Panoramas Section */}
-      <div>
+      {/* <div>
         <div className="section-title">
           <div className="section-title__icon">
             <FiCalendar />
           </div>
           <div>
-            <h2>Monthly 360° Panorama Tour</h2>
+            <h2>Panorama Tour</h2>
             <p>Track site progress through monthly 360° virtual panoramas.</p>
           </div>
         </div>
@@ -106,9 +106,9 @@ const ThreeSixtyTour = () => {
             <FiInfo /> Select any month to view the 360° panorama image and project progress.
           </div>
         )}
-      </div>
+      </div> */}
 
-      {/* 360° Video Tours Section (Clicking opens video URL in a new browser tab) */}
+      {/* 360° Video Tours Section - NO progress on video cards */}
       <div className="pt-lg border-t border-borderLight">
         <div className="section-title">
           <div className="section-title__icon">
@@ -129,8 +129,8 @@ const ThreeSixtyTour = () => {
                 key={vid.video_id}
                 month={vid.month}
                 year={vid.year}
-                title={vid.title}
-                progress={vid.progress}
+                // title={vid.title}
+                // ❌ progress removed
                 notes={vid.notes}
                 thumbnail={vid.thumbnail_url}
                 videoSource={vid.video_source}
@@ -142,17 +142,17 @@ const ThreeSixtyTour = () => {
       </div>
 
       {/* Embedded Google Map Section */}
-      <div className="pt-lg border-t border-borderLight">
+      {/* <div className="pt-lg border-t border-borderLight">
         <SiteMap
           latitude={site?.latitude}
           longitude={site?.longitude}
           siteName={site?.site_name}
           googleMapsUrl={site?.google_maps_url}
         />
-      </div>
+      </div> */}
 
       {/* 360 Panorama Lightbox Overlay */}
-      {selectedTour && (
+      {/* {selectedTour && (
         <div
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 md:p-8 animate-fade-in"
           onClick={handleCloseTour}
@@ -218,22 +218,9 @@ const ThreeSixtyTour = () => {
                 </button>
               </div>
             </div>
-
-            <div className="px-4 py-3 bg-zinc-800 border-t border-gray-700">
-              <div className="flex justify-between text-sm text-gray-400 mb-1">
-                <span>Progress</span>
-                <span>{selectedTour.progress}%</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div
-                  className="bg-blue-600 rounded-full h-2 transition-all duration-500"
-                  style={{ width: `${selectedTour.progress}%` }}
-                />
-              </div>
-            </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

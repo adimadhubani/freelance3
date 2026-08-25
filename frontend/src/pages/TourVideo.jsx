@@ -39,7 +39,7 @@ const TourVideo = () => {
           <FiFilm />
         </div>
         <div>
-          <h2>Monthly Walkthrough & Drone Videos</h2>
+          <h2>Project Videos</h2>
           <p>Watch site progress recordings using native HTML5 streaming video player.</p>
         </div>
       </div>

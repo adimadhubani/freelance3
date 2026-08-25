@@ -419,11 +419,360 @@ const getSitesList = async (req, res) => {
   }
 };
 
+// ============================================
+// CLIENT CRUD
+// ============================================
+
+/**
+ * Admin: Get all clients (with sites array + site count)
+ */
+const getAllClients = async (req, res) => {
+  try {
+    const clients = await Client.findAll({
+      include: [{
+        model: Site,
+        as: 'sites',
+        attributes: ['site_id', 'site_name', 'status'],
+      }],
+      order: [['created_at', 'DESC']],
+    });
+    res.json({ clients });
+  } catch (error) {
+    console.error('getAllClients error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Get single client with all nested details
+ */
+const getClientById = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const client = await Client.findByPk(clientId, {
+      include: [{
+        model: Site,
+        as: 'sites',
+        include: [{
+          model: MonthlyUpdate,
+          as: 'monthlyUpdates',
+          include: [
+            { model: Panorama, as: 'panoramas' },
+            { model: Video, as: 'videos' },
+            { model: Image, as: 'images' },
+          ],
+        }],
+      }],
+    });
+    if (!client) return res.status(404).json({ error: 'Client not found' });
+    res.json({ client });
+  } catch (error) {
+    console.error('getClientById error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Update client name, status, or logo URL
+ */
+const updateClient = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { client_name, status, company_logo } = req.body;
+
+    const client = await Client.findByPk(clientId);
+    if (!client) return res.status(404).json({ error: 'Client not found' });
+
+    const updates = {};
+    if (client_name !== undefined) updates.client_name = client_name;
+    if (status !== undefined) updates.status = status;
+    if (company_logo !== undefined) updates.company_logo = company_logo;
+
+    await client.update(updates);
+    res.json({ message: 'Client updated successfully', client });
+  } catch (error) {
+    console.error('updateClient error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Delete client (cascade deletes sites → updates → media)
+ */
+const deleteClient = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const client = await Client.findByPk(clientId);
+    if (!client) return res.status(404).json({ error: 'Client not found' });
+    await client.destroy();
+    res.json({ message: 'Client deleted successfully' });
+  } catch (error) {
+    console.error('deleteClient error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ============================================
+// SITE CRUD
+// ============================================
+
+/**
+ * Admin: Get all sites with client info
+ */
+const getAllSites = async (req, res) => {
+  try {
+    const sites = await Site.findAll({
+      include: [{
+        model: Client,
+        as: 'client',
+        attributes: ['client_name'],
+      }],
+      order: [['created_at', 'DESC']],
+    });
+    res.json({ sites });
+  } catch (error) {
+    console.error('getAllSites error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Get single site with all nested data
+ */
+const getSiteById = async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const site = await Site.findByPk(siteId, {
+      include: [
+        { model: Client, as: 'client', attributes: ['client_name'] },
+        {
+          model: MonthlyUpdate,
+          as: 'monthlyUpdates',
+          include: [
+            { model: Panorama, as: 'panoramas' },
+            { model: Video, as: 'videos' },
+            { model: Image, as: 'images' },
+          ],
+        },
+        { model: FinalProduct, as: 'finalProducts' },
+      ],
+    });
+    if (!site) return res.status(404).json({ error: 'Site not found' });
+    res.json({ site });
+  } catch (error) {
+    console.error('getSiteById error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Update site fields
+ */
+const updateSite = async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { site_name, location, status, start_date, completion_date } = req.body;
+
+    const site = await Site.findByPk(siteId);
+    if (!site) return res.status(404).json({ error: 'Site not found' });
+
+    const updates = {};
+    if (site_name !== undefined) updates.site_name = site_name;
+    if (location !== undefined) updates.location = location;
+    if (status !== undefined) updates.status = status;
+    if (start_date !== undefined) updates.start_date = start_date || null;
+    if (completion_date !== undefined) updates.completion_date = completion_date || null;
+
+    await site.update(updates);
+    res.json({ message: 'Site updated successfully', site });
+  } catch (error) {
+    console.error('updateSite error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Delete site (cascade)
+ */
+const deleteSite = async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const site = await Site.findByPk(siteId);
+    if (!site) return res.status(404).json({ error: 'Site not found' });
+    await site.destroy();
+    res.json({ message: 'Site deleted successfully' });
+  } catch (error) {
+    console.error('deleteSite error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ============================================
+// MONTHLY UPDATE CRUD
+// ============================================
+
+/**
+ * Admin: Get all monthly updates with site + client context
+ */
+const getAllMonthlyUpdates = async (req, res) => {
+  try {
+    const updates = await MonthlyUpdate.findAll({
+      include: [{
+        model: Site,
+        as: 'site',
+        attributes: ['site_name'],
+        include: [{
+          model: Client,
+          as: 'client',
+          attributes: ['client_name'],
+        }],
+      },
+      { model: Panorama, as: 'panoramas' },
+      { model: Video, as: 'videos' },
+      { model: Image, as: 'images' },
+      ],
+      order: [['year', 'DESC'], ['month', 'DESC']],
+    });
+    res.json({ updates });
+  } catch (error) {
+    console.error('getAllMonthlyUpdates error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Update monthly update fields
+ */
+const updateMonthlyUpdate = async (req, res) => {
+  try {
+    const { updateId } = req.params;
+    const { progress_percentage, notes, update_date } = req.body;
+
+    const update = await MonthlyUpdate.findByPk(updateId);
+    if (!update) return res.status(404).json({ error: 'Monthly update not found' });
+
+    const updates = {};
+    if (progress_percentage !== undefined) updates.progress_percentage = parseInt(progress_percentage);
+    if (notes !== undefined) updates.notes = notes;
+    if (update_date !== undefined) updates.update_date = update_date || null;
+
+    await update.update(updates);
+    res.json({ message: 'Monthly update updated successfully', update });
+  } catch (error) {
+    console.error('updateMonthlyUpdate error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Delete monthly update (cascade deletes panoramas, videos, images)
+ */
+const deleteMonthlyUpdate = async (req, res) => {
+  try {
+    const { updateId } = req.params;
+    const update = await MonthlyUpdate.findByPk(updateId);
+    if (!update) return res.status(404).json({ error: 'Monthly update not found' });
+    await update.destroy();
+    res.json({ message: 'Monthly update deleted successfully' });
+  } catch (error) {
+    console.error('deleteMonthlyUpdate error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ============================================
+// FINAL PRODUCT CRUD
+// ============================================
+
+/**
+ * Admin: Get all final products with site + client context
+ */
+const getAllFinalProducts = async (req, res) => {
+  try {
+    const products = await FinalProduct.findAll({
+      include: [{
+        model: Site,
+        as: 'site',
+        attributes: ['site_name'],
+        include: [{
+          model: Client,
+          as: 'client',
+          attributes: ['client_name'],
+        }],
+      }],
+      order: [['created_at', 'DESC']],
+    });
+    res.json({ products });
+  } catch (error) {
+    console.error('getAllFinalProducts error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Update final product metadata
+ */
+const updateFinalProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { title, product_type } = req.body;
+
+    const product = await FinalProduct.findByPk(productId);
+    if (!product) return res.status(404).json({ error: 'Final product not found' });
+
+    const updates = {};
+    if (title !== undefined) updates.title = title;
+    if (product_type !== undefined) updates.product_type = product_type;
+
+    await product.update(updates);
+    res.json({ message: 'Final product updated successfully', product });
+  } catch (error) {
+    console.error('updateFinalProduct error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Delete final product
+ */
+const deleteFinalProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const product = await FinalProduct.findByPk(productId);
+    if (!product) return res.status(404).json({ error: 'Final product not found' });
+    await product.destroy();
+    res.json({ message: 'Final product deleted successfully' });
+  } catch (error) {
+    console.error('deleteFinalProduct error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
+  // Create
   createClient,
   createSite,
   uploadMonthlyData,
   uploadFinalProduct,
+  // Selectors
   getClientsList,
   getSitesList,
+  // Client CRUD
+  getAllClients,
+  getClientById,
+  updateClient,
+  deleteClient,
+  // Site CRUD
+  getAllSites,
+  getSiteById,
+  updateSite,
+  deleteSite,
+  // Monthly Update CRUD
+  getAllMonthlyUpdates,
+  updateMonthlyUpdate,
+  deleteMonthlyUpdate,
+  // Final Product CRUD
+  getAllFinalProducts,
+  updateFinalProduct,
+  deleteFinalProduct,
 };

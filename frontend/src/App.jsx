@@ -14,6 +14,7 @@ import ImageProduct from './pages/ImageProduct';
 import FinalProduct from './pages/FinalProduct';
 import AdminDashboard from './pages/AdminDashboard';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import SiteMapPage from './pages/SiteMapPage';
 
 // Route protection wrapper
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -106,6 +107,7 @@ function App() {
             <Route path="videos" element={<TourVideo />} />
             <Route path="images" element={<ImageProduct />} />
             <Route path="final-product" element={<FinalProduct />} />
+            <Route path="map" element={<SiteMapPage />} />
           </Route>
 
           {/* Admin upload dashboard */}

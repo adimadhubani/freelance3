@@ -2,7 +2,7 @@ import React from 'react';
 import { FiChevronRight, FiMenu, FiUser } from 'react-icons/fi';
 import { useLocation } from 'react-router-dom';
 
-const labels = { '360-tour': '360° Panorama View', videos: 'Tour Video', images: 'Image Product', 'final-product': 'Final Product' };
+const labels = { '360-tour': 'Panorama View', videos: 'Tour Video', images: 'Image Product', 'final-product': 'Final Product' };
 
 const ClientAvatar = ({ logo, name }) => {
   if (logo) {
@@ -10,25 +10,25 @@ const ClientAvatar = ({ logo, name }) => {
       <img
         src={logo}
         alt={name || 'Client'}
-        className="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm"
+        className="w-14 h-14 rounded-full object-cover border-2 border-gray-200 shadow-md"
       />
     );
   }
   if (name) {
     return (
-      <div className="w-10 h-10 rounded-full bg-primaryDark text-white flex items-center justify-center font-bold text-sm shadow-sm">
+      <div className="w-14 h-14 rounded-full bg-primaryDark text-white flex items-center justify-center font-bold text-xl shadow-md">
         {name.slice(0, 2).toUpperCase()}
       </div>
     );
   }
   return (
-    <div className="portal-heading__avatar">
-      <FiUser />
+    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+      <FiUser className="text-gray-500 text-2xl" />
     </div>
   );
 };
 
-const Header = ({ siteName, onMenuToggle, clientLogo, clientName }) => {
+const Header = ({ siteName, onMenuToggle, clientLogo, clientName, userName }) => {
   const location = useLocation();
   const page = labels[location.pathname.split('/').pop()] || 'Project Dashboard';
 
@@ -38,10 +38,18 @@ const Header = ({ siteName, onMenuToggle, clientLogo, clientName }) => {
         <button onClick={onMenuToggle} className="mr-1 text-[#0b63f6] lg:hidden" aria-label="Open navigation">
           <FiMenu size={24} />
         </button>
+
+        {/* ✅ Larger Logo */}
         <ClientAvatar logo={clientLogo} name={clientName} />
+
         <div>
-          <h1>Welcome Back!</h1>
-          <p>{page}{siteName ? ` · ${siteName}` : ''}</p>
+          {/* ✅ Welcome Back with Username */}
+          <h1 className="text-lg font-bold text-textPrimary">
+            Welcome Back, {userName || 'User'}!
+          </h1>
+          <p className="text-sm text-textSecondary">
+            {page}{siteName ? ` · ${siteName}` : ''}
+          </p>
         </div>
       </div>
       <div className="portal-breadcrumb">
