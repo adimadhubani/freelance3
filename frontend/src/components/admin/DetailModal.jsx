@@ -59,6 +59,9 @@ const DetailModal = ({
                 <div>
                   <h4 className="text-base font-bold text-gray-900">{data.client_name}</h4>
                   <p className="text-xs text-gray-500 font-mono mt-0.5">ID: {data.client_id}</p>
+                  {data.users?.[0]?.email && (
+                    <p className="text-xs text-gray-600 font-mono mt-0.5">Login: {data.users[0].email}</p>
+                  )}
                   {data.office_location && (
                     <p className="text-xs text-blue-700 font-medium mt-1 flex items-center gap-1">
                       <FiMapPin className="text-blue-500 shrink-0" />

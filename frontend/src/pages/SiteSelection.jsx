@@ -6,11 +6,26 @@ import EmptyState from '../components/common/EmptyState';
 import ErrorMessage from '../components/common/ErrorMessage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
-import { getClientSites, getClientProfile } from '../services/siteService'; // ✅ Added getClientProfile
+import { getClientSites, getClientProfile } from '../services/siteService';
+
+// ✅ Company Logo Component - 28x28 (w-28 h-28)
+const CompanyLogo = () => {
+  return (
+    <div className="flex items-center justify-center px-4 py-4">
+      <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-blue-400/30 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+        <img
+          src="/com.jpeg"
+          alt="Aeroview 360"
+          className="w-full h-full object-cover scale-110"
+        />
+      </div>
+    </div>
+  );
+};
 
 const SiteSelection = () => {
   const [sites, setSites] = useState([]);
-  const [profile, setProfile] = useState(null); // ✅ NEW: profile state
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user, logout } = useAuth();
@@ -19,13 +34,12 @@ const SiteSelection = () => {
   const load = async () => {
     setLoading(true);
     try {
-      // ✅ Fetch both sites and profile
       const [sitesData, profileData] = await Promise.all([
         getClientSites(),
         getClientProfile()
       ]);
       setSites(sitesData.sites || []);
-      setProfile(profileData.client || null); // ✅ Store profile
+      setProfile(profileData.client || null);
       setError('');
     } catch (err) {
       setError(err.response?.data?.error || 'Unable to load project sites.');
@@ -56,7 +70,9 @@ const SiteSelection = () => {
 
         {/* ========== SIDEBAR ========== */}
         <aside className="portal-sidebar selection-sidebar">
-          <BrandMark />
+
+          {/* ✅ Company Logo - 28x28 */}
+          <CompanyLogo />
           <div className="portal-rule" />
 
           <div className="selection-person">
@@ -94,9 +110,21 @@ const SiteSelection = () => {
 
           {/* Avatar: client logo → initials → icon fallback */}
           <div className="selection-head">
-            <div className='profile-company'>{profile.company_logo ? <img src={profile.company_logo} alt="Company logo" /> : <div>{profile.client_name.slice(0, 2)}</div>}</div>
-            <h1>Welcome Back, {user?.name?.split(' ')[0]}!</h1>
-            <p>Here is your project portfolio at a glance</p>
+            <div className='profile-company'>
+              {profile?.company_logo ? (
+                <img
+                  src={profile.company_logo}
+                  alt="Company logo"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 shadow-md"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-primaryDark text-white flex items-center justify-center font-bold text-xl shadow-md">
+                  {profile?.client_name?.slice(0, 2).toUpperCase() || 'C'}
+                </div>
+              )}
+            </div>
+            <h1 className="text-2xl font-bold text-textPrimary">Welcome Back, {user?.name?.split(' ')[0]}!</h1>
+            <p className="text-sm text-textSecondary">Here is your project portfolio at a glance</p>
             <div className="portal-rule" />
           </div>
 

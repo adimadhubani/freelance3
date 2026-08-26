@@ -12,6 +12,7 @@ const {
   getAllClients,
   getClientById,
   updateClient,
+  updateClientPassword,
   deleteClient,
   // Site CRUD
   getAllSites,
@@ -85,6 +86,8 @@ router.get('/clients', getAllClients);
 router.get('/clients/:clientId', getClientById);
 // PUT /api/admin/clients/:clientId
 router.put('/clients/:clientId', updateClient);
+// PUT /api/admin/clients/:clientId/password
+router.put('/clients/:clientId/password', updateClientPassword);
 // DELETE /api/admin/clients/:clientId
 router.delete('/clients/:clientId', deleteClient);
 

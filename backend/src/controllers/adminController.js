@@ -431,16 +431,23 @@ const getSitesList = async (req, res) => {
 // ============================================
 
 /**
- * Admin: Get all clients (with sites array + site count)
+ * Admin: Get all clients (with sites array + site count + users)
  */
 const getAllClients = async (req, res) => {
   try {
     const clients = await Client.findAll({
-      include: [{
-        model: Site,
-        as: 'sites',
-        attributes: ['site_id', 'site_name', 'status'],
-      }],
+      include: [
+        {
+          model: Site,
+          as: 'sites',
+          attributes: ['site_id', 'site_name', 'status'],
+        },
+        {
+          model: User,
+          as: 'users',
+          attributes: ['user_id', 'email', 'name', 'status', 'created_at', 'role'],
+        },
+      ],
       order: [['created_at', 'DESC']],
     });
     res.json({ clients });
@@ -451,25 +458,32 @@ const getAllClients = async (req, res) => {
 };
 
 /**
- * Admin: Get single client with all nested details
+ * Admin: Get single client with all nested details and user account
  */
 const getClientById = async (req, res) => {
   try {
     const { clientId } = req.params;
     const client = await Client.findByPk(clientId, {
-      include: [{
-        model: Site,
-        as: 'sites',
-        include: [{
-          model: MonthlyUpdate,
-          as: 'monthlyUpdates',
-          include: [
-            { model: Panorama, as: 'panoramas' },
-            { model: Video, as: 'videos' },
-            { model: Image, as: 'images' },
-          ],
-        }],
-      }],
+      include: [
+        {
+          model: User,
+          as: 'users',
+          attributes: ['user_id', 'email', 'name', 'status', 'created_at', 'role'],
+        },
+        {
+          model: Site,
+          as: 'sites',
+          include: [{
+            model: MonthlyUpdate,
+            as: 'monthlyUpdates',
+            include: [
+              { model: Panorama, as: 'panoramas' },
+              { model: Video, as: 'videos' },
+              { model: Image, as: 'images' },
+            ],
+          }],
+        },
+      ],
     });
     if (!client) return res.status(404).json({ error: 'Client not found' });
     res.json({ client });
@@ -503,6 +517,33 @@ const updateClient = async (req, res) => {
   } catch (error) {
     console.error('updateClient error:', error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Admin: Update client login password
+ */
+const updateClientPassword = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+
+    const user = await User.findOne({ where: { client_id: clientId, role: 'client' } });
+    if (!user) {
+      return res.status(404).json({ error: 'Client user account not found.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await user.update({ password_hash: hashedPassword });
+
+    res.json({ message: 'Password updated successfully.' });
+  } catch (error) {
+    console.error('updateClientPassword error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error.' });
   }
 };
 
@@ -771,6 +812,7 @@ module.exports = {
   getAllClients,
   getClientById,
   updateClient,
+  updateClientPassword,
   deleteClient,
   // Site CRUD
   getAllSites,

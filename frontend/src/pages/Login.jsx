@@ -2,8 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiLock, FiShield, FiUser } from 'react-icons/fi';
 import toast, { Toaster } from 'react-hot-toast';
-import BrandMark from '../components/common/BrandMark';
 import { useAuth } from '../hooks/useAuth';
+
+// ✅ Company Logo Component - 28x28 (w-28 h-28)
+const CompanyLogo = () => {
+  return (
+    <div className="flex items-center justify-center px-4 py-4">
+      <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-blue-400/30 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+        <img
+          src="/com.jpeg"
+          alt="Aeroview 360"
+          className="w-full h-full object-cover scale-110"
+        />
+      </div>
+    </div>
+  );
+};
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -49,8 +63,11 @@ const Login = () => {
 
         {/* Left Sidebar */}
         <aside className="portal-sidebar auth-brand">
-          <BrandMark />
+
+          {/* ✅ Company Logo - 28x28 */}
+          <CompanyLogo />
           <div className="portal-rule" />
+
           <div className="auth-founder">
             <strong>AEROVIEW<br /><span>360</span></strong>
             <p>Construction intelligence, presented clearly.</p>

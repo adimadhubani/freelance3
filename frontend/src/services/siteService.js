@@ -62,6 +62,11 @@ export const updateClient = async (clientId, data) => {
   return response.data;
 };
 
+export const updateClientPassword = async (clientId, newPassword) => {
+  const response = await api.put(`/admin/clients/${clientId}/password`, { newPassword });
+  return response.data;
+};
+
 export const deleteClient = async (clientId) => {
   const response = await api.delete(`/admin/clients/${clientId}`);
   return response.data;

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit2, FiX, FiCheck } from 'react-icons/fi';
+import { FiEdit2, FiX, FiCheck, FiEye, FiEyeOff, FiLock, FiKey } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { updateClientPassword } from '../../services/siteService';
 
 const EditModal = ({
   isOpen,
@@ -8,9 +10,17 @@ const EditModal = ({
   data = null,
   onSave,
   onCancel,
+  onUpdatePassword,
   loading = false,
 }) => {
   const [formData, setFormData] = useState({});
+
+  // Password management state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     if (data) {
@@ -46,6 +56,13 @@ const EditModal = ({
     } else {
       setFormData({});
     }
+
+    // Reset password state when modal opens/data changes
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setPasswordLoading(false);
   }, [data, entityType, isOpen]);
 
   if (!isOpen || !data) return null;
@@ -58,6 +75,48 @@ const EditModal = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     onSave(formData);
+  };
+
+  const userEmail = data.users?.[0]?.email || data.email || data.user?.email || 'No email associated';
+
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return null;
+    if (pwd.length < 6) return { label: 'Min 6 chars', color: 'text-red-600 bg-red-50' };
+    if (pwd.length < 8) return { label: 'Fair', color: 'text-amber-600 bg-amber-50' };
+    if (/[A-Z]/.test(pwd) && /[0-9]/.test(pwd) && /[^A-Za-z0-9]/.test(pwd)) {
+      return { label: 'Strong', color: 'text-green-600 bg-green-50' };
+    }
+    return { label: 'Good', color: 'text-blue-600 bg-blue-50' };
+  };
+
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match.');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      if (onUpdatePassword) {
+        await onUpdatePassword(data.client_id, newPassword);
+      } else {
+        await updateClientPassword(data.client_id, newPassword);
+        toast.success('Client password updated successfully!');
+      }
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update client password.');
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   return (
@@ -177,6 +236,114 @@ const EditModal = ({
                       placeholder="e.g. 72.8777"
                     />
                   </div>
+                </div>
+
+                {/* Password Section */}
+                <div className="border-t border-gray-200 pt-4 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center text-xs">
+                      <FiLock />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+                        Client User & Password
+                      </h4>
+                      <p className="text-[11px] text-gray-500">
+                        Manage login credentials for this client account
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                      Email (Read-only)
+                    </label>
+                    <input
+                      type="email"
+                      value={userEmail}
+                      disabled
+                      className="w-full border border-gray-200 bg-gray-100 text-gray-600 rounded-lg px-3 py-2 text-sm cursor-not-allowed select-all font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        New Password
+                      </label>
+                      {newPassword && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getPasswordStrength(newPassword)?.color}`}>
+                          {getPasswordStrength(newPassword)?.label}
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password (min 6 chars)"
+                        className="w-full border border-gray-300 bg-white rounded-lg px-3 py-2 text-sm pr-10 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                        tabIndex="-1"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="w-full border border-gray-300 bg-white rounded-lg px-3 py-2 text-sm pr-10 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                        tabIndex="-1"
+                        aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                      >
+                        {showConfirmPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                      </button>
+                    </div>
+                    {confirmPassword && newPassword !== confirmPassword && (
+                      <p className="text-[11px] text-red-500 mt-1 font-medium">Passwords do not match</p>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handlePasswordUpdate}
+                    disabled={passwordLoading || !newPassword || newPassword !== confirmPassword || newPassword.length < 6}
+                    className="w-full py-2 px-3 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    {passwordLoading ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Updating Password...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiKey size={14} />
+                        <span>Update Password</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </>
             )}

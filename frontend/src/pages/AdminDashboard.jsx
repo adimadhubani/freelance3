@@ -10,6 +10,7 @@ import {
   // CRUD functions
   getAllClients,
   updateClient,
+  updateClientPassword,
   deleteClient,
   getAllSites,
   updateSite,
@@ -186,6 +187,17 @@ const AdminDashboard = () => {
       toast.error(err.response?.data?.error || 'Failed to update item.');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (clientId, newPassword) => {
+    try {
+      await updateClientPassword(clientId, newPassword);
+      toast.success('Client login password updated successfully!');
+      return { success: true };
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update client password.');
+      throw err;
     }
   };
 
@@ -1666,6 +1678,7 @@ const AdminDashboard = () => {
         title={editModalState.title}
         loading={actionLoading}
         onSave={handleSaveEdit}
+        onUpdatePassword={handleUpdatePassword}
         onCancel={() => setEditModalState({ isOpen: false, entityType: 'client', data: null, title: '' })}
       />
 
