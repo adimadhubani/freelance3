@@ -8,7 +8,7 @@ const { uploadToCloudinary, uploadToCloudinaryBuffer } = require('../utils/cloud
  */
 const createClient = async (req, res) => {
   try {
-    const { client_name, user_name, email, password } = req.body;
+    const { client_name, user_name, email, password, office_location, office_latitude, office_longitude } = req.body;
 
     if (
       typeof client_name !== 'string' || !client_name.trim() ||
@@ -43,10 +43,16 @@ const createClient = async (req, res) => {
       return res.status(409).json({ error: 'A user with this email already exists.' });
     }
 
+    const officeLat = office_latitude !== undefined && office_latitude !== '' && office_latitude !== null ? parseFloat(office_latitude) : null;
+    const officeLng = office_longitude !== undefined && office_longitude !== '' && office_longitude !== null ? parseFloat(office_longitude) : null;
+
     const { client, user } = await sequelize.transaction(async (transaction) => {
       const createdClient = await Client.create({
         client_name: client_name.trim(),
         company_logo: logoUrl,
+        office_location: office_location && typeof office_location === 'string' ? office_location.trim() : null,
+        office_latitude: officeLat,
+        office_longitude: officeLng,
         status: 'Active',
       }, { transaction });
 
@@ -357,6 +363,7 @@ const uploadFinalProduct = async (req, res) => {
     if (req.files && req.files.preview_file) {
       const result = await uploadToCloudinaryBuffer(req.files.preview_file[0], { folder: `aeroview/sites/${site_id}/previews` });
       previewUrl = result.url;
+      previewPublicId = result.publicId;
     } else if (req.body.preview_url) {
       previewUrl = req.body.preview_url;
     }
@@ -478,7 +485,7 @@ const getClientById = async (req, res) => {
 const updateClient = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const { client_name, status, company_logo } = req.body;
+    const { client_name, status, company_logo, office_location, office_latitude, office_longitude } = req.body;
 
     const client = await Client.findByPk(clientId);
     if (!client) return res.status(404).json({ error: 'Client not found' });
@@ -487,6 +494,9 @@ const updateClient = async (req, res) => {
     if (client_name !== undefined) updates.client_name = client_name;
     if (status !== undefined) updates.status = status;
     if (company_logo !== undefined) updates.company_logo = company_logo;
+    if (office_location !== undefined) updates.office_location = office_location && typeof office_location === 'string' ? office_location.trim() : null;
+    if (office_latitude !== undefined) updates.office_latitude = office_latitude !== '' && office_latitude !== null ? parseFloat(office_latitude) : null;
+    if (office_longitude !== undefined) updates.office_longitude = office_longitude !== '' && office_longitude !== null ? parseFloat(office_longitude) : null;
 
     await client.update(updates);
     res.json({ message: 'Client updated successfully', client });

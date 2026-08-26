@@ -65,6 +65,16 @@ const SiteSelection = () => {
             <p><FiBriefcase /> Secure client workspace</p>
           </div>
 
+          {/* Office Location */}
+          <div className="my-3 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10 text-left">
+            <p className="text-[11px] text-blue-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
+              <FiMapPin size={13} /> Office Location
+            </p>
+            <p className="text-xs text-slate-200 mt-1 truncate" title={profile?.office_location || user?.office_location || 'Office location not set'}>
+              {profile?.office_location || user?.office_location || 'Office location not set'}
+            </p>
+          </div>
+
           <div className="auth-features">
             <p><FiBriefcase /> Project progress records</p>
             <p><FiMapPin /> Site-specific access</p>

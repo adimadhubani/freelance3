@@ -51,6 +51,9 @@ const getClientProfile = async (req, res) => {
         client_id: client.client_id,
         client_name: client.client_name,
         company_logo: client.company_logo,
+        office_location: client.office_location,
+        office_latitude: client.office_latitude,
+        office_longitude: client.office_longitude,
         status: client.status,
         stats: {
           active_sites: activeSitesCount,

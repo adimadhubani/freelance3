@@ -15,6 +15,18 @@ const Client = sequelize.define('Client', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  office_location: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  office_latitude: {
+    type: DataTypes.DECIMAL(10, 8),
+    allowNull: true,
+  },
+  office_longitude: {
+    type: DataTypes.DECIMAL(11, 8),
+    allowNull: true,
+  },
   status: {
     type: DataTypes.STRING,
     defaultValue: 'Active', // Active, Inactive

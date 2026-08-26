@@ -44,7 +44,11 @@ const DashboardLayout = () => {
     <div className="portal-page">
       <div className="portal-shell">
         {/* Navigation Sidebar */}
-        <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={closeSidebar}
+          officeLocation={user?.office_location}
+        />
 
         {/* Main Content Area */}
         <div className="portal-main flex flex-col min-w-0 relative">

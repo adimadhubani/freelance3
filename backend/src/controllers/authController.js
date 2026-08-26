@@ -8,9 +8,16 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
 
 const publicUser = (user) => ({
-  user_id: user.user_id, name: user.name, email: user.email, role: user.role,
-  client_id: user.client_id, client_name: user.client ? user.client.client_name : null,
+  user_id: user.user_id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  client_id: user.client_id,
+  client_name: user.client ? user.client.client_name : null,
   company_logo: user.client ? user.client.company_logo : null,
+  office_location: user.client ? user.client.office_location : null,
+  office_latitude: user.client ? user.client.office_latitude : null,
+  office_longitude: user.client ? user.client.office_longitude : null,
 });
 
 const createSession = (user, rememberMe = false) => ({

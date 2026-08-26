@@ -1,18 +1,20 @@
 import React from 'react';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
-import { FiBox, FiCompass, FiImage, FiLogOut, FiPlayCircle, FiX, FiMap } from 'react-icons/fi';
+import { FiBox, FiCompass, FiImage, FiLogOut, FiPlayCircle, FiX, FiMap, FiMapPin } from 'react-icons/fi';
 import { useAuth } from '../../hooks/useAuth';
 import BrandMark from '../common/BrandMark';
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, officeLocation }) => {
   const { siteId } = useParams();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  const currentOfficeLocation = officeLocation !== undefined ? officeLocation : user?.office_location;
+
   const navItems = [
-    ['360° Tour', 'Explore 360° Panorama', `/sites/${siteId}/360-tour`, FiCompass],
-    ['Tour Video', 'Walkthrough & Flythrough', `/sites/${siteId}/videos`, FiPlayCircle],
-    ['Image Product', 'Project Images & Captures', `/sites/${siteId}/images`, FiImage],
+    ['360° Virtual Tour', 'Explore 360° Panorama', `/sites/${siteId}/360-tour`, FiCompass],
+    ['Site Videos', 'Explore Site Videos', `/sites/${siteId}/videos`, FiPlayCircle],
+    ['Site Images', 'Project Images & Captures', `/sites/${siteId}/images`, FiImage],
     ['Final Product', 'Deliverables & Reports', `/sites/${siteId}/final-product`, FiBox],
     ['Site Map', 'View Location on Map', `/sites/${siteId}/map`, FiMap], // ✅ NEW
   ];
@@ -37,6 +39,16 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         <BrandMark />
         <div className="portal-rule" />
+
+        {/* Office Location Section */}
+        <div className="mb-4 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10">
+          <p className="text-[11px] text-blue-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
+            <FiMapPin size={13} /> Office Location
+          </p>
+          <p className="text-xs text-slate-200 mt-1 truncate" title={currentOfficeLocation || 'Office location not set'}>
+            {currentOfficeLocation || 'Office location not set'}
+          </p>
+        </div>
 
         <nav className="portal-nav" aria-label="Project modules">
           {navItems.map(([name, description, path, Icon]) => (

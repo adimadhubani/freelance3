@@ -35,15 +35,14 @@ const FinalProduct = () => {
       <div className="flex border-b border-borderLight mb-lg">
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-md py-sm font-semibold text-sm transition-all duration-200 border-b-2 ${
-            activeTab === 'all'
-              ? 'border-primaryDark text-textPrimary'
-              : 'border-transparent text-textMuted hover:text-textSecondary'
-          }`}
+          className={`px-md py-sm font-semibold text-sm transition-all duration-200 border-b-2 ${activeTab === 'all'
+            ? 'border-primaryDark text-textPrimary'
+            : 'border-transparent text-textMuted hover:text-textSecondary'
+            }`}
         >
           All Schematics ({finalProducts.length})
         </button>
-        <button
+        {/* <button
           onClick={() => setActiveTab('elevation')}
           className={`px-md py-sm font-semibold text-sm transition-all duration-200 border-b-2 ${
             activeTab === 'elevation'
@@ -52,17 +51,16 @@ const FinalProduct = () => {
           }`}
         >
           Elevation Views ({finalProducts.filter(p => p.product_type === 'elevation').length})
-        </button>
-        <button
+        </button> */}
+        {/* <button
           onClick={() => setActiveTab('top-view')}
-          className={`px-md py-sm font-semibold text-sm transition-all duration-200 border-b-2 ${
-            activeTab === 'top-view'
+          className={`px-md py-sm font-semibold text-sm transition-all duration-200 border-b-2 ${activeTab === 'top-view'
               ? 'border-primaryDark text-textPrimary'
               : 'border-transparent text-textMuted hover:text-textSecondary'
-          }`}
+            }`}
         >
           Aerial & Top-Views ({finalProducts.filter(p => p.product_type === 'top-view').length})
-        </button>
+        </button> */}
       </div>
 
       {/* Grid List */}

@@ -312,6 +312,9 @@ const AdminDashboard = () => {
   const [clientPasswordConfirm, setClientPasswordConfirm] = useState('');
   const [clientLogo, setClientLogo] = useState(null);
   const [clientLogoUrl, setClientLogoUrl] = useState('');
+  const [clientOfficeLocation, setClientOfficeLocation] = useState('');
+  const [clientOfficeLatitude, setClientOfficeLatitude] = useState('');
+  const [clientOfficeLongitude, setClientOfficeLongitude] = useState('');
 
   const handleClientSubmit = async (e) => {
     e.preventDefault();
@@ -329,6 +332,9 @@ const AdminDashboard = () => {
     formData.append('password', clientPassword);
     if (clientLogo) formData.append('company_logo', clientLogo);
     if (clientLogoUrl) formData.append('company_logo_url', clientLogoUrl);
+    if (clientOfficeLocation) formData.append('office_location', clientOfficeLocation);
+    if (clientOfficeLatitude) formData.append('office_latitude', clientOfficeLatitude);
+    if (clientOfficeLongitude) formData.append('office_longitude', clientOfficeLongitude);
 
     try {
       await createClient(formData);
@@ -340,6 +346,9 @@ const AdminDashboard = () => {
       setClientPasswordConfirm('');
       setClientLogo(null);
       setClientLogoUrl('');
+      setClientOfficeLocation('');
+      setClientOfficeLatitude('');
+      setClientOfficeLongitude('');
       loadSelectors();
       fetchAllData();
     } catch (err) {
@@ -549,14 +558,24 @@ const AdminDashboard = () => {
       ),
     },
     {
+      header: 'Office Location',
+      render: (row) => (
+        <div className="flex items-center gap-1 text-xs text-gray-700 max-w-[180px]">
+          <FiMapPin className="text-blue-500 shrink-0 text-xs" />
+          <span className="truncate" title={row.office_location || 'Not set'}>
+            {row.office_location || <span className="text-gray-400 italic">Not set</span>}
+          </span>
+        </div>
+      ),
+    },
+    {
       header: 'Status',
       render: (row) => (
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-            row.status === 'Active'
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-gray-100 text-gray-700 border border-gray-200'
-          }`}
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${row.status === 'Active'
+            ? 'bg-green-50 text-green-700 border border-green-200'
+            : 'bg-gray-100 text-gray-700 border border-gray-200'
+            }`}
         >
           {row.status || 'Active'}
         </span>
@@ -599,13 +618,12 @@ const AdminDashboard = () => {
       header: 'Status',
       render: (row) => (
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-            row.status === 'Active'
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : row.status === 'In Progress'
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${row.status === 'Active'
+            ? 'bg-green-50 text-green-700 border border-green-200'
+            : row.status === 'In Progress'
               ? 'bg-amber-50 text-amber-700 border border-amber-200'
               : 'bg-blue-50 text-blue-700 border border-blue-200'
-          }`}
+            }`}
         >
           {row.status || 'Active'}
         </span>
@@ -1087,16 +1105,15 @@ const AdminDashboard = () => {
                 { id: 'client', label: '1. Register Client' },
                 { id: 'site', label: '2. Register Site' },
                 { id: 'monthly', label: '3. Upload Monthly Data' },
-                { id: 'product', label: '4. Upload Blueprints' },
+                { id: 'product', label: '4. Final Products' },
               ].map((st) => (
                 <button
                   key={st.id}
                   onClick={() => setCreateSubTab(st.id)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${
-                    createSubTab === st.id
-                      ? 'bg-white text-blue-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${createSubTab === st.id
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                    }`}
                 >
                   {st.label}
                 </button>
@@ -1187,6 +1204,40 @@ const AdminDashboard = () => {
                       placeholder="https://example.com/logo.jpg"
                       value={clientLogoUrl}
                       onChange={(e) => setClientLogoUrl(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="form-label">Office Location (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 123 Business Park, Mumbai"
+                    value={clientOfficeLocation}
+                    onChange={(e) => setClientOfficeLocation(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="form-label">Office Latitude (Optional)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="e.g. 19.0760"
+                      value={clientOfficeLatitude}
+                      onChange={(e) => setClientOfficeLatitude(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Office Longitude (Optional)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="e.g. 72.8777"
+                      value={clientOfficeLongitude}
+                      onChange={(e) => setClientOfficeLongitude(e.target.value)}
                       className="form-input"
                     />
                   </div>
@@ -1376,7 +1427,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Media A: Panorama */}
-                <div className="border-t border-gray-200 pt-4 mt-4">
+                {/* <div className="border-t border-gray-200 pt-4 mt-4">
                   <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 mb-2">
                     Media A: 360° Panorama Tour Image
                   </h4>
@@ -1411,12 +1462,12 @@ const AdminDashboard = () => {
                       />
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Media B: Walkthrough Video */}
                 <div className="border-t border-gray-200 pt-4 mt-4">
                   <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 mb-2">
-                    Media B: Progress Drone/Walkthrough Video
+                    Site Videos & 360° Virtual Tour
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
@@ -1436,9 +1487,9 @@ const AdminDashboard = () => {
                         onChange={(e) => setMVidType(e.target.value)}
                         className="form-input"
                       >
-                        <option value="walkthrough">Walkthrough</option>
-                        <option value="flythrough">Flythrough (Drone)</option>
-                        <option value="360">360° Video</option>
+                        <option value="walkthrough">Site Videos</option>
+                        {/* <option value="flythrough">Flythrough (Drone)</option> */}
+                        <option value="360">360° Virtual Tour</option>
                       </select>
                     </div>
                     <div>
@@ -1466,7 +1517,7 @@ const AdminDashboard = () => {
                 {/* Media C: Photos & Documents */}
                 <div className="border-t border-gray-200 pt-4 mt-4">
                   <h4 className="font-bold text-xs uppercase tracking-wider text-gray-500 mb-2">
-                    Media C: Progress Photos & PDF Documents
+                    Site Images
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -1512,7 +1563,7 @@ const AdminDashboard = () => {
             {/* Sub-form 4: Blueprints upload */}
             {createSubTab === 'product' && (
               <form onSubmit={handleProductSubmit} className="space-y-4">
-                <h3 className="text-base font-bold text-gray-900 mb-1">Upload Blueprint or Schematic Layout</h3>
+                <h3 className="text-base font-bold text-gray-900 mb-1">Final Products</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="form-label">Associate Project Site</label>

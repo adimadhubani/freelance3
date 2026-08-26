@@ -59,6 +59,17 @@ const DetailModal = ({
                 <div>
                   <h4 className="text-base font-bold text-gray-900">{data.client_name}</h4>
                   <p className="text-xs text-gray-500 font-mono mt-0.5">ID: {data.client_id}</p>
+                  {data.office_location && (
+                    <p className="text-xs text-blue-700 font-medium mt-1 flex items-center gap-1">
+                      <FiMapPin className="text-blue-500 shrink-0" />
+                      {data.office_location}
+                      {data.office_latitude && data.office_longitude && (
+                        <span className="text-[10px] text-gray-400 font-mono">
+                          ({data.office_latitude}, {data.office_longitude})
+                        </span>
+                      )}
+                    </p>
+                  )}
                   <span className={`inline-block mt-2 px-2.5 py-0.5 text-xs font-semibold rounded-full ${
                     data.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
                   }`}>

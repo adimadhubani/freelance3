@@ -19,6 +19,9 @@ const EditModal = ({
           client_name: data.client_name || '',
           status: data.status || 'Active',
           company_logo: data.company_logo || '',
+          office_location: data.office_location || '',
+          office_latitude: data.office_latitude !== null && data.office_latitude !== undefined ? data.office_latitude : '',
+          office_longitude: data.office_longitude !== null && data.office_longitude !== undefined ? data.office_longitude : '',
         });
       } else if (entityType === 'site') {
         setFormData({
@@ -131,6 +134,49 @@ const EditModal = ({
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
                     placeholder="https://example.com/logo.png"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                    Office Location
+                  </label>
+                  <input
+                    type="text"
+                    name="office_location"
+                    value={formData.office_location || ''}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                    placeholder="e.g. 123 Business Park, Mumbai"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                      Office Latitude
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      name="office_latitude"
+                      value={formData.office_latitude || ''}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                      placeholder="e.g. 19.0760"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                      Office Longitude
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      name="office_longitude"
+                      value={formData.office_longitude || ''}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                      placeholder="e.g. 72.8777"
+                    />
+                  </div>
                 </div>
               </>
             )}
